@@ -3,13 +3,14 @@ import {
   Navigation, Compass, Radio, Users, Clock, Flame, 
   MapPin, Bell, Shield, ArrowRight, ArrowUpRight, CheckCircle2,
   Sparkles, Layers, Sliders, Coffee, BookOpen, Dumbbell,
-  Utensils, ChevronRight, ChevronDown, Play, Pause, RotateCcw, AlertTriangle,
-  Zap, Eye, Bookmark, Activity, Info, Building, School, Check,
-  Smartphone, Share2, Award, Search, FastForward, Copy
+  Utensils, ChevronRight, ChevronDown, RotateCcw,
+  Zap, Eye, Bookmark, Activity, Info, School, Check,
+  Smartphone, Share2, Award, Search, Copy
 } from 'lucide-react';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import logoImg from './assets/hoppin_logo.png';
+import Navbar from './Navbar';
+import Footer from './Footer';
+import logoImg from './hoppin_logo.png';
+import CampusMap from './CampusMap';
 import './App.css';
 
 // ── Realistic Campus Facilities Telemetry Data ──
@@ -119,12 +120,6 @@ export default function App() {
   const [pinnedRows, setPinnedRows] = useState([1, 4]);
   const [boardTime, setBoardTime] = useState('');
 
-  // State: Interactive Map Simulator
-  const [simPlaying, setSimPlaying] = useState(true);
-  const [simSpeed, setSimSpeed] = useState(1);
-  const [simStep, setSimStep] = useState(0);
-  const [isBottleneckActive, setIsBottleneckActive] = useState(true);
-
   // State: Interactive Architecture Directory
   const [activeSystemIdx, setActiveSystemIdx] = useState(0);
   const [expandedMobileIdx, setExpandedMobileIdx] = useState(0);
@@ -152,16 +147,6 @@ export default function App() {
     const timer = setInterval(updateTime, 1000);
     return () => clearInterval(timer);
   }, []);
-
-  // Map Simulator Auto-Play
-  useEffect(() => {
-    if (!simPlaying) return;
-    const intervalTime = simSpeed === 2 ? 1400 : 2500;
-    const interval = setInterval(() => {
-      setSimStep((prev) => (prev + 1) % 6);
-    }, intervalTime);
-    return () => clearInterval(interval);
-  }, [simPlaying, simSpeed]);
 
   // Occasional random pulse in telemetry values
   const [dynamicRows, setDynamicRows] = useState(liveDepartureRows);
@@ -626,195 +611,64 @@ export default function App() {
           ============================================================ */}
       <section className="hop-section hop-map-section" id="un-map-simulator">
         <div className="hop-container">
-          
+
           <div className="hop-section-head">
             <div className="hop-section-pill">
               <Navigation size={13} className="text-mint" />
-              <span>LIVE AMBIENT BYPASS VISUALIZER</span>
+              <span>LIVE CAMPUS MAP</span>
             </div>
             <h2 className="hop-section-title">
-              Sensors spot the crowd. <span className="hop-text-gradient">HOPPIN quietly routes you around.</span>
+              The real SRM KTR map, <span className="hop-text-gradient">reading live crowd density.</span>
             </h2>
             <p className="hop-section-desc">
-              Watch how HOPPIN detects the heavy 340+ student Tech Park Atrium bottleneck during the 08:50 AM class shift and guides you across the peaceful North Garden Walkway.
+              Pick a start and end point below to get a route across campus — filtered for wheelchair
+              accessibility if you need it. Marker color shows current crowd density at each venue.
             </p>
           </div>
 
           <div className="hop-map-grid">
-            
-            {/* Left: Vector Cartography Map Canvas */}
+
+            {/* Left: Live Leaflet Map */}
             <div className="hop-map-panel">
-              
+
               {/* Map Floating Status Bar */}
               <div className="hop-map-bar">
                 <div className="hop-mb-left">
                   <span className="hop-live-pulse" />
-                  <span className="mono">SIMULATION · ROUTE #409 (SRM IST QUAD)</span>
-                </div>
-                <div className="hop-mb-controls">
-                  <button 
-                    className={`hop-map-btn ${isBottleneckActive ? 'active' : ''}`}
-                    onClick={() => setIsBottleneckActive(!isBottleneckActive)}
-                  >
-                    <AlertTriangle size={13} />
-                    <span>{isBottleneckActive ? 'Bottleneck: ON (340+)' : 'Bottleneck: OFF'}</span>
-                  </button>
-                  <button 
-                    className="hop-map-btn"
-                    onClick={() => setSimPlaying(!simPlaying)}
-                  >
-                    {simPlaying ? <Pause size={13} /> : <Play size={13} />}
-                    <span>{simPlaying ? 'Pause' : 'Play'}</span>
-                  </button>
-                  <button 
-                    className="hop-map-btn"
-                    onClick={() => setSimSpeed(simSpeed === 1 ? 2 : 1)}
-                  >
-                    <FastForward size={13} />
-                    <span>{simSpeed}x Speed</span>
-                  </button>
+                  <span className="mono">LIVE · SRM KTR CAMPUS</span>
                 </div>
               </div>
 
-              {/* Vector SVG Cartography Map */}
-              <div className="hop-svg-wrapper">
-                <svg viewBox="0 0 900 380" className="hop-campus-svg">
-                  <defs>
-                    <linearGradient id="hopGreenGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#10E79D" />
-                      <stop offset="100%" stopColor="#059669" />
-                    </linearGradient>
-                    <radialGradient id="hopCrowdPulse">
-                      <stop offset="0%" stopColor="#EF4444" stopOpacity="0.45" />
-                      <stop offset="60%" stopColor="#F59E0B" stopOpacity="0.2" />
-                      <stop offset="100%" stopColor="#F59E0B" stopOpacity="0.0" />
-                    </radialGradient>
-                    <pattern id="hopMapGrid" width="30" height="30" patternUnits="userSpaceOnUse">
-                      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(255, 255, 255, 0.04)" strokeWidth="1" />
-                    </pattern>
-                  </defs>
-
-                  {/* Terrain Base with Radar Grid */}
-                  <rect width="100%" height="100%" fill="#080C18" rx="16" />
-                  <rect width="100%" height="100%" fill="url(#hopMapGrid)" rx="16" />
-
-                  {/* Campus Building Blocks */}
-                  <g className="map-building">
-                    <rect x="50" y="30" width="130" height="150" rx="10" fill="#131C30" stroke="rgba(255, 255, 255, 0.12)" strokeWidth="1.2" />
-                    <text x="115" y="100" textAnchor="middle" fill="#CBD5E1" fontSize="13" fontWeight="700">Central Library</text>
-                    <text x="115" y="122" textAnchor="middle" fill="#94A3B8" fontSize="10" className="mono">Seats: 18 Free</text>
-                  </g>
-
-                  <g className="map-building">
-                    <rect x="230" y="150" width="130" height="70" rx="10" fill="#131C30" stroke="rgba(255, 255, 255, 0.12)" strokeWidth="1.2" />
-                    <text x="295" y="190" textAnchor="middle" fill="#CBD5E1" fontSize="12" fontWeight="700">Food Court 1</text>
-                  </g>
-
-                  <g className="map-building">
-                    <rect x="390" y="140" width="220" height="85" rx="10" fill="#131C30" stroke="rgba(255, 255, 255, 0.12)" strokeWidth="1.2" />
-                    <text x="500" y="185" textAnchor="middle" fill="#CBD5E1" fontSize="13" fontWeight="800">Tech Park Atrium</text>
-                    <text x="500" y="205" textAnchor="middle" fill="#EF4444" fontSize="10" className="mono">340+ Students Transit</text>
-                  </g>
-
-                  <g className="map-building">
-                    <rect x="670" y="30" width="190" height="150" rx="10" fill="#131C30" stroke="rgba(255, 255, 255, 0.12)" strokeWidth="1.2" />
-                    <text x="765" y="95" textAnchor="middle" fill="#CBD5E1" fontSize="13" fontWeight="800">University Bldg</text>
-                    <text x="765" y="118" textAnchor="middle" fill="#10E79D" fontSize="11" fontWeight="700">Room 905 (Calculus)</text>
-                  </g>
-
-                  {/* Green Garden Walkway Bypass Path Highlight */}
-                  <rect x="390" y="30" width="220" height="42" rx="8" fill="rgba(16, 231, 157, 0.12)" stroke="#10E79D" strokeWidth="1" strokeDasharray="3 3" />
-                  <text x="500" y="56" textAnchor="middle" fill="#6EE7B7" fontSize="11" fontWeight="700">🌿 North Garden Walkway Promenade</text>
-
-                  {/* Direct Route (Gets Congested) */}
-                  <path 
-                    d="M 70 300 L 210 300 L 500 300 L 760 300 L 760 190" 
-                    fill="none" 
-                    stroke={isBottleneckActive ? '#334155' : '#10E79D'} 
-                    strokeWidth="4" 
-                    strokeDasharray={isBottleneckActive ? '4 8' : 'none'}
-                    strokeLinecap="round" 
-                  />
-
-                  {/* HOPPIN Smart Bypass Path (Glowing Emerald Laser) */}
-                  {isBottleneckActive && (
-                    <path 
-                      d="M 70 300 L 210 300 L 210 90 L 610 90 L 670 90 L 760 90 L 760 180" 
-                      fill="none" 
-                      stroke="url(#hopGreenGrad)" 
-                      strokeWidth="5" 
-                      strokeLinecap="round"
-                    />
-                  )}
-
-                  {/* Pulsing Bottleneck Zone */}
-                  {isBottleneckActive && (
-                    <g transform="translate(480, 300)">
-                      <circle cx="0" cy="0" r="38" fill="url(#hopCrowdPulse)" className="hop-pulse-circle" />
-                      <circle cx="0" cy="0" r="14" fill="#EF4444" opacity="0.9" />
-                      <text x="0" y="4" textAnchor="middle" fill="#FFFFFF" fontSize="11" fontWeight="800">⚠️ 340</text>
-                      <text x="0" y="-45" textAnchor="middle" fill="#FCA5A5" fontSize="11" fontWeight="700" className="mono">
-                        CORRIDOR BOTTLENECK
-                      </text>
-                    </g>
-                  )}
-
-                  {/* Waypoints */}
-                  <circle cx="70" cy="300" r="7" fill="#10E79D" />
-                  <text x="70" y="332" textAnchor="middle" fill="#94A3B8" fontSize="11" fontWeight="700" className="mono">YOU (Gate 1)</text>
-
-                  <circle cx="210" cy="300" r="5" fill="#38BDF8" />
-                  <circle cx="210" cy="90" r="5" fill="#10E79D" />
-                  <circle cx="610" cy="90" r="5" fill="#10E79D" />
-
-                  {/* Moving Student Avatar */}
-                  <circle 
-                    cx={isBottleneckActive ? (simStep < 2 ? 70 + simStep * 70 : 210 + (simStep - 1) * 110) : 70 + simStep * 135}
-                    cy={isBottleneckActive ? (simStep < 2 ? 300 : 90) : 300}
-                    r="8"
-                    fill="#38BDF8"
-                    stroke="#FFFFFF"
-                    strokeWidth="2.5"
-                    className="hop-avatar-dot"
-                  />
-
-                  {/* Target Node */}
-                  <circle cx="760" cy="180" r="9" fill="#10E79D" stroke="#FFFFFF" strokeWidth="2" />
-                  <text x="760" y="215" textAnchor="middle" fill="#10E79D" fontSize="12" fontWeight="800">CLASS 905</text>
-                </svg>
-              </div>
+              <CampusMap />
 
             </div>
 
-            {/* Right: Live Navigation HUD Panel */}
+            {/* Right: Legend & How-it-works Panel */}
             <div className="hop-hud-card-side">
-              
+
               <div className="hop-hcs-header">
                 <span className="hop-hcs-badge">
-                  <Sparkles size={12} />
-                  <span>SMART REROUTE ACTIVE</span>
+                  <Radio size={12} />
+                  <span>CROWD DENSITY LEGEND</span>
                 </span>
-                <span className="hop-hcs-eta mono">ETA: 08:54 AM</span>
-              </div>
-
-              <div className="hop-hcs-dest">
-                <div className="hop-hcs-icon">
-                  <Building size={18} />
-                </div>
-                <div className="hop-hcs-text">
-                  <h4>Room 905 · Calculus Lecture</h4>
-                  <p>University Building · 9th Floor (Dr. Mohanaselvi)</p>
-                </div>
               </div>
 
               <div className="hop-hcs-metrics">
                 <div className="hop-hcs-metric-box">
-                  <span className="label">Reroute Benefit</span>
-                  <span className="val text-mint">- 7.5 Mins Saved</span>
+                  <span className="label">Below 50%</span>
+                  <span className="val text-mint">Quiet</span>
                 </div>
                 <div className="hop-hcs-metric-box">
-                  <span className="label">Friction Index</span>
-                  <span className="val text-mint">12% (Frictionless)</span>
+                  <span className="label">50&ndash;80%</span>
+                  <span className="val" style={{ color: '#F59E0B' }}>Moderate</span>
+                </div>
+                <div className="hop-hcs-metric-box">
+                  <span className="label">Above 80%</span>
+                  <span className="val" style={{ color: '#EF4444' }}>High Queue</span>
+                </div>
+                <div className="hop-hcs-metric-box">
+                  <span className="label">No reading yet</span>
+                  <span className="val" style={{ color: 'var(--hop-text-muted)' }}>Grey</span>
                 </div>
               </div>
 
@@ -822,26 +676,25 @@ export default function App() {
                 <div className="step-bar">
                   <span className="step-dot active" />
                   <div className="step-line" />
-                  <span className="step-dot" />
+                  <span className="step-dot active" />
                 </div>
                 <div className="step-detail">
                   <div className="step-title">
-                    <strong>Bypass via Garden Promenade</strong>
-                    <span className="mono">0.2 km</span>
+                    <strong>How routing works</strong>
                   </div>
-                  <p>Bypasses Tech Park crowd spike. Rejoin Science Quad at Gate 2 stairwell.</p>
+                  <p>Matches your trip against SRM KTR's mapped walking paths, honoring the accessible-only
+                    filter when you set it. Falls back to a direct line when no mapped path covers that
+                    stretch yet.</p>
                 </div>
               </div>
 
-              {/* On-Route Partner Kiosk Perk */}
-              <div className="hop-hcs-perk">
-                <div className="perk-icon">☕</div>
-                <div className="perk-body">
-                  <div className="perk-title">
-                    <span>Java Green Cafe on your path</span>
-                    <span className="perk-badge">0 MIN DETOUR</span>
-                  </div>
-                  <p>Order ahead on WhatsApp — grab cold brew while walking past.</p>
+              <div className="hop-hcs-dest">
+                <div className="hop-hcs-icon">
+                  <Info size={18} />
+                </div>
+                <div className="hop-hcs-text">
+                  <h4>Crowd data updates every 20s</h4>
+                  <p>Backed by the HOPPIN map service — FastAPI + PostGIS on Supabase.</p>
                 </div>
               </div>
 

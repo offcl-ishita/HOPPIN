@@ -3,7 +3,7 @@ import {
   ArrowRight, Menu, X, Radio, Navigation, 
   Sliders, Layers, Coffee, Info, Bookmark, Sparkles 
 } from 'lucide-react';
-import logoImg from '../assets/hoppin_logo.png';
+import logoImg from './hoppin_logo.png';
 import './Navbar.css';
 
 export default function Navbar() {

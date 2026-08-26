@@ -1247,8 +1247,7 @@ export function HoppinEvents() {
     }
   ]);
 
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const activeEvent = events[selectedIndex];
+  const [activeTab, setActiveTab] = useState('ALL');
 
   const toggleRSVP = (id) => {
     setEvents((prev) =>
@@ -1256,111 +1255,103 @@ export function HoppinEvents() {
     );
   };
 
+  const visibleEvents = activeTab === 'RSVP' ? events.filter((e) => e.is_rsvpd) : events;
+
   return (
-    <section className="hop-section hop-dir-section my-16">
+    <section className="hop-section hop-calc-section my-16">
       <div className="hop-container max-w-6xl mx-auto px-4">
-        
-        {/* Section Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#10E79D]/10 border border-[#10E79D]/20 text-[#10E79D] text-xs font-mono uppercase tracking-wider mb-3">
-            <span>⚡ LIVE CAMPUS EVENT RADAR</span>
-          </div>
-          <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white mb-3">
-            Never miss an event, <span className="text-[#10E79D] drop-shadow-[0_0_15px_rgba(16,231,157,0.3)]">engineered for your schedule.</span>
-          </h2>
-          <p className="text-slate-400 text-sm max-w-xl mx-auto font-sans">
-            Synchronized real-time notifications for fests, hackathons, and club workshops happening across campus blocks.
-          </p>
-        </div>
-
-        {/* Dual-Pane Console Layout matching your screenshot */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="hop-calc-card bg-[#081117] border border-slate-800/80 rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden">
           
-          {/* Left: Event Selection List */}
-          <div className="lg:col-span-5 flex flex-col gap-3">
-            {events.map((ev, idx) => {
-              const isSelected = selectedIndex === idx;
-              return (
-                <div
-                  key={ev.id}
-                  onClick={() => setSelectedIndex(idx)}
-                  className={`cursor-pointer p-5 rounded-2xl border transition-all duration-300 ${
-                    isSelected
-                      ? 'bg-[#0B1521] border-[#10E79D]/60 shadow-[0_0_20px_rgba(16,231,157,0.15)] translate-x-1'
-                      : 'bg-[#0B1521]/40 border-slate-800/80 hover:border-slate-700 hover:bg-[#0B1521]/70'
-                  }`}
-                >
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-[10px] font-mono uppercase text-[#10E79D] tracking-wider font-bold">
-                      {ev.code} · {ev.category}
-                    </span>
-                    <span className="text-xs font-mono text-[#38BDF8]">{ev.date}</span>
-                  </div>
-                  <h3 className="text-base font-bold text-white mb-1">{ev.title}</h3>
-                  <p className="text-xs text-slate-400 font-mono truncate">📍 {ev.location}</p>
-                </div>
-              );
-            })}
+          {/* Subtle background glow accent */}
+          <div className="absolute -top-32 -right-32 w-80 h-80 bg-[#10E79D]/5 rounded-full blur-3xl pointer-events-none" />
+
+          {/* Section Header */}
+          <div className="text-center mb-10 relative z-10">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#10E79D]/10 border border-[#10E79D]/25 text-[#10E79D] text-xs font-mono uppercase tracking-wider mb-3">
+              <span>⚡ LIVE CAMPUS EVENT RADAR</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white mb-3">
+              Never miss an event at <span className="text-[#10E79D] drop-shadow-[0_0_15px_rgba(16,231,157,0.3)]">SRM KTR.</span>
+            </h2>
+            <p className="text-slate-400 text-sm max-w-xl mx-auto font-sans">
+              Automated real-time notifications for fests, hackathons, and club workshops happening across campus blocks.
+            </p>
           </div>
 
-          {/* Right: Deep Dive Inspector Card */}
-          <div className="lg:col-span-7">
-            <div className="bg-[#0B1521] border border-slate-800/90 rounded-2xl p-8 shadow-2xl relative overflow-hidden">
-              
-              {/* Top Meta Bar */}
-              <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-800">
-                <span className="text-xs font-mono text-[#10E79D] uppercase tracking-wider font-bold">
-                  {activeEvent.code} · {activeEvent.category}
-                </span>
-                <span className="text-[10px] font-mono uppercase px-3 py-1 rounded-full bg-[#38BDF8]/10 text-[#38BDF8] border border-[#38BDF8]/30 font-bold">
-                  {activeEvent.is_rsvpd ? '✓ REMINDER ACTIVE' : 'MODULE ACTIVE'}
-                </span>
+          {/* Pill-shaped Interactive Tabs */}
+          <div className="flex gap-3 mb-10 justify-center relative z-10">
+            <button
+              onClick={() => setActiveTab('ALL')}
+              className={`px-6 py-2.5 rounded-full text-xs font-mono uppercase tracking-wider transition-all duration-300 border ${
+                activeTab === 'ALL' 
+                  ? 'border-[#10E79D] text-[#10E79D] bg-[#10E79D]/15 font-bold shadow-[0_0_20px_rgba(16,231,157,0.25)] scale-105' 
+                  : 'border-slate-800 text-slate-400 bg-[#020b0e]/60 hover:border-slate-700 hover:text-white'
+              }`}
+            >
+              All Events ({events.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('RSVP')}
+              className={`px-6 py-2.5 rounded-full text-xs font-mono uppercase tracking-wider transition-all duration-300 border ${
+                activeTab === 'RSVP' 
+                  ? 'border-[#10E79D] text-[#10E79D] bg-[#10E79D]/15 font-bold shadow-[0_0_20px_rgba(16,231,157,0.25)] scale-105' 
+                  : 'border-slate-800 text-slate-400 bg-[#020b0e]/60 hover:border-slate-700 hover:text-white'
+              }`}
+            >
+              ★ My Reminders ({events.filter(e => e.is_rsvpd).length})
+            </button>
+          </div>
+
+          {/* Separate Individual Event Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+            {visibleEvents.length === 0 ? (
+              <div className="col-span-full text-center py-14 bg-[#020b0e]/60 rounded-2xl border border-slate-800/80">
+                <p className="text-slate-400 text-sm font-mono">No reminders saved yet.</p>
+                <p className="text-slate-600 text-xs mt-1">Click '+ Set Campus Reminder' on any card below.</p>
               </div>
-
-              {/* Title & Description */}
-              <h3 className="text-2xl font-bold text-white mb-2">{activeEvent.title}</h3>
-              <p className="text-[#38BDF8] font-mono text-xs mb-4">{activeEvent.date} · {activeEvent.time}</p>
-              <p className="text-slate-300 text-sm mb-6 leading-relaxed font-sans">{activeEvent.desc}</p>
-
-              {/* Location Box */}
-              <div className="bg-[#020b0e] border border-slate-800 p-4 rounded-xl mb-6 font-mono text-xs text-slate-300 flex items-center gap-3">
-                <span className="text-xl">📍</span>
-                <div>
-                  <strong className="text-white block mb-0.5">Venue Location</strong>
-                  <span className="text-slate-400">{activeEvent.location}</span>
-                </div>
-              </div>
-
-              {/* Technical Specifications / Highlights */}
-              <div className="mb-8">
-                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block mb-3">EVENT TELEMETRY METRICS</span>
-                <div className="flex flex-wrap gap-2">
-                  {activeEvent.specs.map((spec, sIdx) => (
-                    <div key={sIdx} className="inline-flex items-center gap-2 bg-[#020b0e] border border-slate-800 px-3 py-1.5 rounded-lg text-xs font-mono text-slate-300">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#10E79D]"></span>
-                      <span>{spec}</span>
+            ) : (
+              visibleEvents.map((event) => (
+                <div 
+                  key={event.id} 
+                  className="bg-[#020b0e]/80 border border-slate-800/90 p-6 rounded-2xl shadow-xl flex flex-col justify-between transition-all duration-300 hover:border-[#10E79D]/50 hover:-translate-y-1 hover:shadow-[0_4px_25px_rgba(16,231,157,0.12)] group"
+                >
+                  <div>
+                    {/* Top Tag & Date Row */}
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-[10px] font-mono uppercase px-3 py-1 rounded-full bg-[#10E79D]/10 text-[#10E79D] border border-[#10E79D]/25 font-bold tracking-wider">
+                        {event.code} · {event.category}
+                      </span>
+                      <span className="text-[#38BDF8] text-xs font-mono font-medium">{event.date}</span>
                     </div>
-                  ))}
+                    
+                    <h3 className="text-lg font-bold text-white mb-2 group-hover:text-[#10E79D] transition-colors">{event.title}</h3>
+                    <p className="text-xs font-mono text-[#38BDF8] mb-3">⏰ {event.time}</p>
+                    <p className="text-slate-300 text-xs mb-5 line-clamp-3 leading-relaxed font-sans">{event.desc}</p>
+                    
+                    {/* Venue Metadata Box */}
+                    <div className="bg-[#081117] border border-slate-800/80 p-3 rounded-xl mb-5 font-mono text-xs text-slate-300 flex items-center gap-2.5">
+                      <span>📍</span>
+                      <span className="truncate text-slate-300">{event.location}</span>
+                    </div>
+                  </div>
+
+                  {/* Interactive Button */}
+                  <button
+                    onClick={() => toggleRSVP(event.id)}
+                    className={`w-full py-2.5 rounded-xl text-xs font-mono uppercase tracking-wider font-bold transition-all duration-300 active:scale-95 ${
+                      event.is_rsvpd 
+                        ? 'bg-[#10E79D]/20 text-[#10E79D] border border-[#10E79D]/60 shadow-[0_0_15px_rgba(16,231,157,0.2)]' 
+                        : 'bg-white/5 text-slate-200 border border-slate-700/60 hover:bg-[#10E79D] hover:text-[#020b0e] hover:border-[#10E79D]'
+                    }`}
+                  >
+                    {event.is_rsvpd ? '✓ Reminder Active' : '+ Set Campus Reminder'}
+                  </button>
                 </div>
-              </div>
-
-              {/* Action Button */}
-              <button
-                onClick={() => toggleRSVP(activeEvent.id)}
-                className={`w-full py-3 rounded-xl text-xs font-mono uppercase tracking-widest font-bold transition-all duration-300 active:scale-98 ${
-                  activeEvent.is_rsvpd 
-                    ? 'bg-[#10E79D]/20 text-[#10E79D] border border-[#10E79D]/60 shadow-[0_0_15px_rgba(16,231,157,0.2)]' 
-                    : 'bg-[#10E79D] text-[#020b0e] hover:bg-[#10E79D]/90 shadow-[0_0_20px_rgba(16,231,157,0.3)]'
-                }`}
-              >
-                {activeEvent.is_rsvpd ? '✓ Campus Reminder Confirmed' : '+ Set Campus Reminder'}
-              </button>
-
-            </div>
+              ))
+            )}
           </div>
 
         </div>
-
       </div>
     </section>
   );

@@ -820,7 +820,7 @@ export default function App() {
       </section>
            
       {/* SECTION 3.5: UPCOMING EVENTS & RSVP*/}
-      <section id="un-events">
+      <div id="un-events">
         <HoppinEvents />
       </section>
       {/* ============================================================
@@ -1207,19 +1207,30 @@ export default function App() {
 }
 
       {/* --- HOPPIN EVENTS COMPONENT --- */}
+/* ============================================================
+   HOPPIN EVENTS — INTERACTIVE EVENT RADAR
+   ============================================================ */
+
 export function HoppinEvents() {
   const [events, setEvents] = useState([
     {
       id: 'e1',
       code: 'EVT-01',
       category: 'Fest',
-      title: 'Milan - Annual Cultural Fest',
+      title: 'Milan — Annual Cultural Fest',
       date: 'Oct 12, 2026',
-      time: '10:00 AM - 10:00 PM',
+      time: '10:00 AM – 10:00 PM',
       location: 'TP Ganesan Auditorium',
-      desc: 'The flagship annual cultural festival featuring mega stage concerts, celebrity performances, and thousands of students.',
-      is_rsvpd: false,
-      specs: ['Mega Crowd Expected', 'Bypass Route Active', 'Live Stage Telemetry']
+      desc: 'The flagship annual cultural festival featuring mega stage concerts, celebrity performances, food stalls, celebrity performances and thousands of students.',
+      capacity: 87,
+      expected: 'HIGH',
+      isRSVP: false,
+      live: false,
+      specs: [
+        'Mega Crowd Expected',
+        'Bypass Route Active',
+        'Live Stage Telemetry'
+      ]
     },
     {
       id: 'e2',
@@ -1227,131 +1238,743 @@ export function HoppinEvents() {
       category: 'Hackathon',
       title: 'ACM SIGAI Hackathon',
       date: 'Oct 15, 2026',
-      time: '08:00 AM - 08:00 PM',
-      location: 'Tech Park, 4th Floor',
-      desc: '12-hour intensive coding marathon focused on spatial AI algorithms, automated routing, and campus telemetry systems.',
-      is_rsvpd: true,
-      specs: ['High Speed Wi-Fi Hub', 'Power Stations Available', 'Sub-2s Latency Tracking']
+      time: '08:00 AM – 08:00 PM',
+      location: 'Tech Park · 4th Floor',
+      desc: '12-hour intensive coding marathon focused on spatial AI algorithms, automated routing and campus telemetry systems.',
+      capacity: 64,
+      expected: 'MODERATE',
+      isRSVP: true,
+      live: false,
+      specs: [
+        'High Speed Wi-Fi Hub',
+        'Power Stations Available',
+        'Sub-2s Latency Tracking'
+      ]
     },
     {
       id: 'e3',
       code: 'EVT-03',
-      category: 'Club Workshop',
+      category: 'Workshop',
       title: 'Robotics Club Recruitment',
       date: 'Oct 18, 2026',
-      time: '04:30 PM - 06:30 PM',
-      location: 'University Building (UB)',
-      desc: 'Introductory hardware showcase and member orientation for autonomous pathfinding and ground drone navigation.',
-      is_rsvpd: false,
-      specs: ['Live Demonstration', 'Stairwell B Access', 'Open to All Years']
+      time: '04:30 PM – 06:30 PM',
+      location: 'University Building · UB',
+      desc: 'Introductory hardware showcase and member orientation for autonomous pathfinding and ground-drone navigation.',
+      capacity: 38,
+      expected: 'LOW',
+      isRSVP: false,
+      live: false,
+      specs: [
+        'Live Demonstration',
+        'Stairwell B Access',
+        'Open to All Years'
+      ]
+    },
+    {
+      id: 'e4',
+      code: 'EVT-04',
+      category: 'Seminar',
+      title: 'AI & Future Mobility Summit',
+      date: 'Oct 21, 2026',
+      time: '11:00 AM – 03:00 PM',
+      location: 'Dr. T. P. Ganesan Auditorium',
+      desc: 'Industry experts discuss autonomous navigation, smart campuses and the future of AI-powered mobility.',
+      capacity: 72,
+      expected: 'MODERATE',
+      isRSVP: false,
+      live: false,
+      specs: [
+        'Industry Speakers',
+        'Auditorium Seating',
+        'Live Q&A'
+      ]
     }
   ]);
 
-  const [activeTab, setActiveTab] = useState('ALL');
+  const [activeFilter, setActiveFilter] = useState('ALL');
+  const [searchEvent, setSearchEvent] = useState('');
+  const [expandedEvent, setExpandedEvent] = useState(null);
+  const [showReminders, setShowReminders] = useState(false);
 
+  /* RSVP / Reminder toggle */
   const toggleRSVP = (id) => {
     setEvents((prev) =>
-      prev.map((ev) => (ev.id === id ? { ...ev, is_rsvpd: !ev.is_rsvpd } : ev))
+      prev.map((event) =>
+        event.id === id
+          ? { ...event, isRSVP: !event.isRSVP }
+          : event
+      )
     );
   };
 
-  const visibleEvents = activeTab === 'RSVP' ? events.filter((e) => e.is_rsvpd) : events;
+  /* Filter + Search */
+  const visibleEvents = events.filter((event) => {
+    const matchesFilter =
+      activeFilter === 'ALL'
+        ? true
+        : activeFilter === 'REMINDERS'
+        ? event.isRSVP
+        : event.category.toUpperCase() === activeFilter;
+
+    const search = searchEvent.toLowerCase();
+
+    const matchesSearch =
+      event.title.toLowerCase().includes(search) ||
+      event.location.toLowerCase().includes(search) ||
+      event.category.toLowerCase().includes(search);
+
+    return matchesFilter && matchesSearch;
+  });
+
+  const reminderCount = events.filter((event) => event.isRSVP).length;
 
   return (
-    <section className="hop-section hop-calc-section my-16">
-      <div className="hop-container max-w-6xl mx-auto px-4">
-        <div className="hop-calc-card bg-[#081117] border border-slate-800/80 rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden">
-          
-          {/* Subtle background glow accent */}
-          <div className="absolute -top-32 -right-32 w-80 h-80 bg-[#10E79D]/5 rounded-full blur-3xl pointer-events-none" />
+    <section
+      className="hop-section hop-events-section"
+      id="hoppin-events"
+      style={{
+        background:
+          'radial-gradient(circle at 85% 10%, rgba(16,231,157,0.07), transparent 28%), #02090d',
+        padding: '90px 0'
+      }}
+    >
+      <div className="hop-container">
 
-          {/* Section Header */}
-          <div className="text-center mb-10 relative z-10">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#10E79D]/10 border border-[#10E79D]/25 text-[#10E79D] text-xs font-mono uppercase tracking-wider mb-3">
-              <span>⚡ LIVE CAMPUS EVENT RADAR</span>
-            </div>
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white mb-3">
-              Never miss an event at <span className="text-[#10E79D] drop-shadow-[0_0_15px_rgba(16,231,157,0.3)]">SRM KTR.</span>
-            </h2>
-            <p className="text-slate-400 text-sm max-w-xl mx-auto font-sans">
-              Automated real-time notifications for fests, hackathons, and club workshops happening across campus blocks.
-            </p>
+        {/* =====================================================
+            HEADER
+            ===================================================== */}
+
+        <div className="hop-section-head">
+
+          <div
+            className="hop-section-pill"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            <span
+              style={{
+                width: '7px',
+                height: '7px',
+                borderRadius: '50%',
+                background: '#10E79D',
+                boxShadow: '0 0 12px #10E79D',
+                animation: 'pulse 1.5s infinite'
+              }}
+            />
+
+            <span>LIVE CAMPUS EVENT RADAR</span>
           </div>
 
-          {/* Pill-shaped Interactive Tabs */}
-          <div className="flex gap-3 mb-10 justify-center relative z-10">
-            <button
-              onClick={() => setActiveTab('ALL')}
-              className={`px-6 py-2.5 rounded-full text-xs font-mono uppercase tracking-wider transition-all duration-300 border ${
-                activeTab === 'ALL' 
-                  ? 'border-[#10E79D] text-[#10E79D] bg-[#10E79D]/15 font-bold shadow-[0_0_20px_rgba(16,231,157,0.25)] scale-105' 
-                  : 'border-slate-800 text-slate-400 bg-[#020b0e]/60 hover:border-slate-700 hover:text-white'
-              }`}
-            >
-              All Events ({events.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('RSVP')}
-              className={`px-6 py-2.5 rounded-full text-xs font-mono uppercase tracking-wider transition-all duration-300 border ${
-                activeTab === 'RSVP' 
-                  ? 'border-[#10E79D] text-[#10E79D] bg-[#10E79D]/15 font-bold shadow-[0_0_20px_rgba(16,231,157,0.25)] scale-105' 
-                  : 'border-slate-800 text-slate-400 bg-[#020b0e]/60 hover:border-slate-700 hover:text-white'
-              }`}
-            >
-              ★ My Reminders ({events.filter(e => e.is_rsvpd).length})
-            </button>
+          <h2 className="hop-section-title">
+            Never miss what's happening at{' '}
+            <span className="hop-text-gradient">
+              SRM KTR.
+            </span>
+          </h2>
+
+          <p className="hop-section-desc">
+            Discover upcoming fests, hackathons, seminars and club
+            activities — while HOPPIN monitors crowd levels and
+            recommends smarter routes around busy venues.
+          </p>
+
+        </div>
+
+
+        {/* =====================================================
+            EVENT COMMAND BAR
+            ===================================================== */}
+
+        <div
+          style={{
+            background: 'rgba(8,17,23,0.9)',
+            border: '1px solid rgba(148,163,184,0.12)',
+            borderRadius: '18px',
+            padding: '14px',
+            marginBottom: '28px',
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '12px',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            backdropFilter: 'blur(12px)'
+          }}
+        >
+
+          {/* Filters */}
+
+          <div
+            style={{
+              display: 'flex',
+              gap: '8px',
+              flexWrap: 'wrap'
+            }}
+          >
+
+            {[
+              ['ALL', 'All Events'],
+              ['FEST', 'Fests'],
+              ['HACKATHON', 'Hackathons'],
+              ['WORKSHOP', 'Workshops'],
+              ['SEMINAR', 'Seminars'],
+              ['REMINDERS', `My Reminders (${reminderCount})`]
+            ].map(([value, label]) => (
+
+              <button
+                key={value}
+                onClick={() => setActiveFilter(value)}
+                style={{
+                  border:
+                    activeFilter === value
+                      ? '1px solid #10E79D'
+                      : '1px solid rgba(148,163,184,0.15)',
+
+                  background:
+                    activeFilter === value
+                      ? 'rgba(16,231,157,0.12)'
+                      : 'rgba(2,11,14,0.7)',
+
+                  color:
+                    activeFilter === value
+                      ? '#10E79D'
+                      : '#94A3B8',
+
+                  padding: '9px 14px',
+                  borderRadius: '999px',
+                  fontSize: '11px',
+                  fontFamily: 'monospace',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  cursor: 'pointer',
+                  transition: 'all 0.25s ease'
+                }}
+              >
+                {label}
+              </button>
+
+            ))}
+
           </div>
 
-          {/* Separate Individual Event Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
-            {visibleEvents.length === 0 ? (
-              <div className="col-span-full text-center py-14 bg-[#020b0e]/60 rounded-2xl border border-slate-800/80">
-                <p className="text-slate-400 text-sm font-mono">No reminders saved yet.</p>
-                <p className="text-slate-600 text-xs mt-1">Click '+ Set Campus Reminder' on any card below.</p>
-              </div>
-            ) : (
-              visibleEvents.map((event) => (
-                <div 
-                  key={event.id} 
-                  className="bg-[#020b0e]/80 border border-slate-800/90 p-6 rounded-2xl shadow-xl flex flex-col justify-between transition-all duration-300 hover:border-[#10E79D]/50 hover:-translate-y-1 hover:shadow-[0_4px_25px_rgba(16,231,157,0.12)] group"
-                >
-                  <div>
-                    {/* Top Tag & Date Row */}
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="text-[10px] font-mono uppercase px-3 py-1 rounded-full bg-[#10E79D]/10 text-[#10E79D] border border-[#10E79D]/25 font-bold tracking-wider">
-                        {event.code} · {event.category}
-                      </span>
-                      <span className="text-[#38BDF8] text-xs font-mono font-medium">{event.date}</span>
-                    </div>
-                    
-                    <h3 className="text-lg font-bold text-white mb-2 group-hover:text-[#10E79D] transition-colors">{event.title}</h3>
-                    <p className="text-xs font-mono text-[#38BDF8] mb-3">⏰ {event.time}</p>
-                    <p className="text-slate-300 text-xs mb-5 line-clamp-3 leading-relaxed font-sans">{event.desc}</p>
-                    
-                    {/* Venue Metadata Box */}
-                    <div className="bg-[#081117] border border-slate-800/80 p-3 rounded-xl mb-5 font-mono text-xs text-slate-300 flex items-center gap-2.5">
-                      <span>📍</span>
-                      <span className="truncate text-slate-300">{event.location}</span>
-                    </div>
-                  </div>
 
-                  {/* Interactive Button */}
-                  <button
-                    onClick={() => toggleRSVP(event.id)}
-                    className={`w-full py-2.5 rounded-xl text-xs font-mono uppercase tracking-wider font-bold transition-all duration-300 active:scale-95 ${
-                      event.is_rsvpd 
-                        ? 'bg-[#10E79D]/20 text-[#10E79D] border border-[#10E79D]/60 shadow-[0_0_15px_rgba(16,231,157,0.2)]' 
-                        : 'bg-white/5 text-slate-200 border border-slate-700/60 hover:bg-[#10E79D] hover:text-[#020b0e] hover:border-[#10E79D]'
-                    }`}
-                  >
-                    {event.is_rsvpd ? '✓ Reminder Active' : '+ Set Campus Reminder'}
-                  </button>
-                </div>
-              ))
-            )}
+          {/* Search */}
+
+          <div
+            style={{
+              position: 'relative',
+              minWidth: '220px',
+              flex: '0 1 280px'
+            }}
+          >
+
+            <Search
+              size={15}
+              style={{
+                position: 'absolute',
+                left: '12px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#64748B'
+              }}
+            />
+
+            <input
+              type="text"
+              placeholder="Search events..."
+              value={searchEvent}
+              onChange={(e) => setSearchEvent(e.target.value)}
+              style={{
+                width: '100%',
+                boxSizing: 'border-box',
+                background: '#020B0E',
+                border: '1px solid rgba(148,163,184,0.15)',
+                borderRadius: '10px',
+                padding: '10px 12px 10px 36px',
+                color: '#E2E8F0',
+                outline: 'none',
+                fontFamily: 'monospace',
+                fontSize: '11px'
+              }}
+            />
+
           </div>
 
         </div>
+
+
+        {/* =====================================================
+            EVENT GRID
+            ===================================================== */}
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns:
+              'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: '18px'
+          }}
+        >
+
+          {visibleEvents.length === 0 ? (
+
+            <div
+              style={{
+                gridColumn: '1 / -1',
+                textAlign: 'center',
+                padding: '60px 20px',
+                background: '#081117',
+                border: '1px solid rgba(148,163,184,0.12)',
+                borderRadius: '20px'
+              }}
+            >
+              <CalendarDays
+                size={30}
+                style={{
+                  color: '#475569',
+                  marginBottom: '12px'
+                }}
+              />
+
+              <h3
+                style={{
+                  color: '#CBD5E1',
+                  margin: '0 0 6px'
+                }}
+              >
+                No events found
+              </h3>
+
+              <p
+                style={{
+                  color: '#64748B',
+                  fontSize: '13px',
+                  margin: 0
+                }}
+              >
+                Try another category or search term.
+              </p>
+
+            </div>
+
+          ) : (
+
+            visibleEvents.map((event) => {
+
+              const isExpanded = expandedEvent === event.id;
+
+              const capacityColor =
+                event.capacity >= 80
+                  ? '#EF4444'
+                  : event.capacity >= 60
+                  ? '#F59E0B'
+                  : '#10E79D';
+
+              return (
+
+                <div
+                  key={event.id}
+                  style={{
+                    background:
+                      'linear-gradient(145deg, rgba(8,17,23,0.98), rgba(2,11,14,0.98))',
+                    border: event.isRSVP
+                      ? '1px solid rgba(16,231,157,0.45)'
+                      : '1px solid rgba(148,163,184,0.12)',
+                    borderRadius: '20px',
+                    padding: '22px',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    transition:
+                      'transform 0.25s ease, border 0.25s ease, box-shadow 0.25s ease',
+                    boxShadow: event.isRSVP
+                      ? '0 0 25px rgba(16,231,157,0.08)'
+                      : 'none'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform =
+                      'translateY(-5px)';
+                    e.currentTarget.style.borderColor =
+                      'rgba(16,231,157,0.45)';
+                    e.currentTarget.style.boxShadow =
+                      '0 15px 35px rgba(0,0,0,0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform =
+                      'translateY(0)';
+                    e.currentTarget.style.borderColor =
+                      event.isRSVP
+                        ? 'rgba(16,231,157,0.45)'
+                        : 'rgba(148,163,184,0.12)';
+                    e.currentTarget.style.boxShadow =
+                      event.isRSVP
+                        ? '0 0 25px rgba(16,231,157,0.08)'
+                        : 'none';
+                  }}
+                >
+
+                  {/* Decorative glow */}
+
+                  <div
+                    style={{
+                      position: 'absolute',
+                      width: '130px',
+                      height: '130px',
+                      borderRadius: '50%',
+                      background:
+                        'rgba(16,231,157,0.04)',
+                      filter: 'blur(35px)',
+                      top: '-60px',
+                      right: '-40px',
+                      pointerEvents: 'none'
+                    }}
+                  />
+
+
+                  {/* Event Code */}
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '16px'
+                    }}
+                  >
+
+                    <span
+                      style={{
+                        color: '#10E79D',
+                        background: 'rgba(16,231,157,0.08)',
+                        border: '1px solid rgba(16,231,157,0.2)',
+                        padding: '5px 9px',
+                        borderRadius: '999px',
+                        fontSize: '9px',
+                        fontFamily: 'monospace',
+                        fontWeight: 700
+                      }}
+                    >
+                      {event.code} · {event.category.toUpperCase()}
+                    </span>
+
+                    {event.isRSVP && (
+                      <span
+                        style={{
+                          color: '#10E79D',
+                          fontSize: '9px',
+                          fontFamily: 'monospace'
+                        }}
+                      >
+                        ● SAVED
+                      </span>
+                    )}
+
+                  </div>
+
+
+                  {/* Title */}
+
+                  <h3
+                    style={{
+                      color: '#F8FAFC',
+                      fontSize: '19px',
+                      margin: '0 0 10px',
+                      lineHeight: 1.25
+                    }}
+                  >
+                    {event.title}
+                  </h3>
+
+
+                  {/* Date */}
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '8px',
+                      alignItems: 'center',
+                      color: '#38BDF8',
+                      fontSize: '11px',
+                      fontFamily: 'monospace',
+                      marginBottom: '8px'
+                    }}
+                  >
+                    <Clock size={13} />
+                    {event.date} · {event.time}
+                  </div>
+
+
+                  {/* Location */}
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '8px',
+                      alignItems: 'center',
+                      color: '#94A3B8',
+                      fontSize: '11px',
+                      marginBottom: '16px'
+                    }}
+                  >
+                    <MapPin size={13} />
+                    {event.location}
+                  </div>
+
+
+                  {/* Description */}
+
+                  <p
+                    style={{
+                      color: '#94A3B8',
+                      fontSize: '12px',
+                      lineHeight: 1.7,
+                      margin: '0 0 18px'
+                    }}
+                  >
+                    {event.desc}
+                  </p>
+
+
+                  {/* Crowd Meter */}
+
+                  <div
+                    style={{
+                      background: '#020B0E',
+                      border:
+                        '1px solid rgba(148,163,184,0.1)',
+                      borderRadius: '12px',
+                      padding: '12px',
+                      marginBottom: '16px'
+                    }}
+                  >
+
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        marginBottom: '8px',
+                        fontFamily: 'monospace',
+                        fontSize: '9px'
+                      }}
+                    >
+
+                      <span style={{ color: '#64748B' }}>
+                        EXPECTED CROWD
+                      </span>
+
+                      <span style={{ color: capacityColor }}>
+                        {event.expected} · {event.capacity}%
+                      </span>
+
+                    </div>
+
+                    <div
+                      style={{
+                        height: '5px',
+                        background: '#17232A',
+                        borderRadius: '99px',
+                        overflow: 'hidden'
+                      }}
+                    >
+
+                      <div
+                        style={{
+                          width: `${event.capacity}%`,
+                          height: '100%',
+                          background: capacityColor,
+                          borderRadius: '99px',
+                          boxShadow: `0 0 10px ${capacityColor}`
+                        }}
+                      />
+
+                    </div>
+
+                  </div>
+
+
+                  {/* Expanded Details */}
+
+                  {isExpanded && (
+
+                    <div
+                      style={{
+                        borderTop:
+                          '1px solid rgba(148,163,184,0.1)',
+                        paddingTop: '15px',
+                        marginBottom: '15px'
+                      }}
+                    >
+
+                      <div
+                        style={{
+                          color: '#64748B',
+                          fontFamily: 'monospace',
+                          fontSize: '9px',
+                          marginBottom: '10px'
+                        }}
+                      >
+                        HOPPIN EVENT INTELLIGENCE
+                      </div>
+
+                      {event.specs.map((spec, index) => (
+
+                        <div
+                          key={index}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            color: '#CBD5E1',
+                            fontSize: '11px',
+                            marginBottom: '7px'
+                          }}
+                        >
+                          <CheckCircle2
+                            size={12}
+                            color="#10E79D"
+                          />
+
+                          {spec}
+                        </div>
+
+                      ))}
+
+                    </div>
+
+                  )}
+
+
+                  {/* Actions */}
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr auto',
+                      gap: '8px'
+                    }}
+                  >
+
+                    <button
+                      onClick={() => toggleRSVP(event.id)}
+                      style={{
+                        border: event.isRSVP
+                          ? '1px solid rgba(16,231,157,0.6)'
+                          : '1px solid rgba(148,163,184,0.2)',
+                        background: event.isRSVP
+                          ? 'rgba(16,231,157,0.12)'
+                          : 'rgba(255,255,255,0.03)',
+                        color: event.isRSVP
+                          ? '#10E79D'
+                          : '#CBD5E1',
+                        padding: '11px',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        fontFamily: 'monospace',
+                        fontSize: '10px',
+                        fontWeight: 700,
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      <Bell
+                        size={13}
+                        style={{
+                          verticalAlign: 'middle',
+                          marginRight: '6px'
+                        }}
+                      />
+
+                      {event.isRSVP
+                        ? 'REMINDER ACTIVE'
+                        : 'SET REMINDER'}
+                    </button>
+
+
+                    <button
+                      onClick={() =>
+                        setExpandedEvent(
+                          isExpanded ? null : event.id
+                        )
+                      }
+                      style={{
+                        width: '44px',
+                        border:
+                          '1px solid rgba(148,163,184,0.2)',
+                        background: 'rgba(255,255,255,0.03)',
+                        color: '#94A3B8',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.2s ease'
+                      }}
+                      title="View event details"
+                    >
+                      {isExpanded ? (
+                        <ChevronDown size={16} />
+                      ) : (
+                        <ChevronRight size={16} />
+                      )}
+                    </button>
+
+                  </div>
+
+                </div>
+
+              );
+            })
+
+          )}
+
+        </div>
+
+
+        {/* =====================================================
+            FOOTER STATUS
+            ===================================================== */}
+
+        <div
+          style={{
+            marginTop: '22px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '10px',
+            padding: '13px 16px',
+            background: 'rgba(8,17,23,0.65)',
+            border:
+              '1px solid rgba(148,163,184,0.1)',
+            borderRadius: '12px',
+            fontFamily: 'monospace',
+            fontSize: '9px',
+            color: '#64748B'
+          }}
+        >
+
+          <span>
+            <span
+              style={{
+                color: '#10E79D',
+                marginRight: '6px'
+              }}
+            >
+              ●
+            </span>
+
+            EVENT RADAR ONLINE
+          </span>
+
+          <span>
+            {events.length} CAMPUS EVENTS INDEXED
+          </span>
+
+          <span>
+            CROWD DATA SYNC · EVERY 20 SEC
+          </span>
+
+        </div>
+
       </div>
     </section>
   );

@@ -1214,7 +1214,7 @@ export default function App() {
   );
 }
 
-// --- HOPPIN EVENTS COMPONENT --- 
+      {/* --- HOPPIN EVENTS COMPONENT --- */}
 export function HoppinEvents() {
   const [events, setEvents] = useState([
     { id: 'e1', title: 'Milan - Annual Cultural Fest', category: 'Fest', location: 'TP Ganesan Auditorium', date: 'Oct 12, 2026', time: '10:00 AM', is_rsvpd: false },

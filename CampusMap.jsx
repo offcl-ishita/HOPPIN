@@ -1,12 +1,20 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
-import { RefreshCw, Navigation2, Loader2, WifiOff } from 'lucide-react';
+import { RefreshCw, Navigation2, Loader2, WifiOff, LocateFixed, AlertTriangle } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import './CampusMap.css';
 
 // Points at the HOPPIN map-service FastAPI backend. Override at build time
 // with VITE_API_BASE (see .env.example) once it's deployed somewhere real.
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
+
+// Public OSRM demo instance -- no key needed, but it's explicitly not a
+// production service (no uptime guarantee, aggressive rate limits) and its
+// public profile is "driving" only (no walking profile available), so this
+// is used as a supplementary distance/duration estimate, not the primary
+// campus route -- that stays the accessible-aware /route call against our
+// own backend.
+const OSRM_BASE = 'https://router.project-osrm.org/route/v1/driving';
 
 const CAMPUS_CENTER = [12.8231, 80.0444]; // SRM KTR, approximate
 
@@ -17,11 +25,27 @@ function colorForDensity(density) {
   return '#10E79D'; // mint
 }
 
+function geolocationErrorMessage(err) {
+  switch (err.code) {
+    case err.PERMISSION_DENIED:
+      return 'Location permission denied. Enable it in your browser settings to see your position on the map.';
+    case err.POSITION_UNAVAILABLE:
+      return 'Your location is currently unavailable.';
+    case err.TIMEOUT:
+      return 'Timed out getting your location.';
+    default:
+      return 'Could not get your location.';
+  }
+}
+
 export default function CampusMap() {
   const mapElRef = useRef(null);
   const mapRef = useRef(null);
   const markerLayerRef = useRef(null);
   const routeLayerRef = useRef(null);
+  const userMarkerRef = useRef(null);
+  const osrmLayerRef = useRef(null);
+  const hasCenteredOnUserRef = useRef(false);
 
   const [features, setFeatures] = useState([]);
   const [status, setStatus] = useState('loading'); // loading | ready | offline
@@ -30,6 +54,9 @@ export default function CampusMap() {
   const [accessibleOnly, setAccessibleOnly] = useState(false);
   const [routeNote, setRouteNote] = useState('');
   const [routing, setRouting] = useState(false);
+  const [geoError, setGeoError] = useState('');
+  const [userPosition, setUserPosition] = useState(null);
+  const [osrmEstimate, setOsrmEstimate] = useState(null); // { distanceKm, durationMin }
 
   // ---- map init (once) ----
   useEffect(() => {
@@ -37,9 +64,12 @@ export default function CampusMap() {
 
     const map = L.map(mapElRef.current, { zoomControl: true }).setView(CAMPUS_CENTER, 16);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-      maxZoom: 20,
+    // Plain OSM tiles -- no API key ever required. Darkened to match the
+    // site's theme via a CSS filter on .hop-leaflet-el (see CampusMap.css),
+    // since CARTO's free keyless dark tiles stopped working.
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19,
     }).addTo(map);
 
     markerLayerRef.current = L.layerGroup().addTo(map);
@@ -50,6 +80,59 @@ export default function CampusMap() {
       mapRef.current = null;
     };
   }, []);
+
+  // ---- live location tracking ----
+  useEffect(() => {
+    if (!('geolocation' in navigator)) {
+      setGeoError('Geolocation is not supported by this browser.');
+      return;
+    }
+
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setUserPosition({ lat: latitude, lng: longitude });
+        setGeoError('');
+
+        const map = mapRef.current;
+        if (!map) return;
+
+        if (!userMarkerRef.current) {
+          userMarkerRef.current = L.circleMarker([latitude, longitude], {
+            radius: 8,
+            fillColor: '#38BDF8',
+            color: '#fff',
+            weight: 2,
+            fillOpacity: 1,
+          })
+            .bindPopup('You are here')
+            .addTo(map);
+        } else {
+          userMarkerRef.current.setLatLng([latitude, longitude]);
+        }
+
+        // Center on the user only for the first fix -- re-centering on every
+        // update (GPS ticks every few seconds) would fight any manual pan/
+        // zoom and make the map unusable. Use the "Center on me" button for
+        // manual re-centering after that.
+        if (!hasCenteredOnUserRef.current) {
+          map.setView([latitude, longitude], 17);
+          hasCenteredOnUserRef.current = true;
+        }
+      },
+      (err) => setGeoError(geolocationErrorMessage(err)),
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, []);
+
+  const centerOnUser = () => {
+    const map = mapRef.current;
+    if (map && userPosition) {
+      map.setView([userPosition.lat, userPosition.lng], 17);
+    }
+  };
 
   // ---- fetch + draw locations ----
   const loadLocations = useCallback(async () => {
@@ -134,6 +217,11 @@ export default function CampusMap() {
 
     setRouting(true);
     setRouteNote('Finding route...');
+    setOsrmEstimate(null);
+
+    // Fire the supplementary OSRM estimate independently -- it must never
+    // block or fail the primary accessible-route result above.
+    fetchOsrmEstimate(map, startLat, startLng, endLat, endLng);
 
     try {
       const res = await fetch(url);
@@ -159,6 +247,39 @@ export default function CampusMap() {
       setRouteNote('Could not fetch a route. Is the map backend running?');
     } finally {
       setRouting(false);
+    }
+  };
+
+  // Supplementary estimate only -- OSRM's public demo server is
+  // driving-profile only and not production-grade, so failures here are
+  // swallowed rather than surfaced as the main routing error.
+  const fetchOsrmEstimate = async (map, startLat, startLng, endLat, endLng) => {
+    try {
+      const osrmUrl = `${OSRM_BASE}/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`;
+      const res = await fetch(osrmUrl);
+      if (!res.ok) throw new Error(`OSRM request failed: ${res.status}`);
+      const data = await res.json();
+      const route = data.routes && data.routes[0];
+      if (!route) throw new Error('No OSRM route found');
+
+      if (osrmLayerRef.current) {
+        map.removeLayer(osrmLayerRef.current);
+      }
+      const osrmLatLngs = route.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+      osrmLayerRef.current = L.polyline(osrmLatLngs, {
+        color: '#A855F7',
+        weight: 4,
+        opacity: 0.75,
+        dashArray: '6 8',
+      }).addTo(map);
+
+      setOsrmEstimate({
+        distanceKm: (route.distance / 1000).toFixed(1),
+        durationMin: Math.round(route.duration / 60),
+      });
+    } catch (err) {
+      console.error('OSRM estimate unavailable:', err);
+      setOsrmEstimate(null);
     }
   };
 
@@ -224,7 +345,25 @@ export default function CampusMap() {
           </div>
 
           {routeNote && <div className="hop-map-route-note mono">{routeNote}</div>}
+          {osrmEstimate && (
+            <div className="hop-map-route-note mono hop-map-osrm-note">
+              Driving-network estimate: {osrmEstimate.distanceKm} km · {osrmEstimate.durationMin} min
+            </div>
+          )}
         </div>
+      )}
+
+      {geoError && (
+        <div className="hop-map-geo-error">
+          <AlertTriangle size={13} />
+          <span>{geoError}</span>
+        </div>
+      )}
+
+      {userPosition && status !== 'offline' && (
+        <button className="hop-map-locate-btn" onClick={centerOnUser} title="Center on me">
+          <LocateFixed size={16} />
+        </button>
       )}
     </div>
   );

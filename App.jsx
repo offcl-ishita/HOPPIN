@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-import hoppinevents from './hoppinevents';
+import HoppiEvents from './HoppinEvents';
 
 import { 
   Navigation, Compass, Radio, Users, Clock, Flame, 
@@ -820,6 +820,18 @@ export default function App() {
         </div>
       </section>
 
+      </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
+          SECTION 3.5: UPCOMING EVENTS & RSVP
+          ============================================================ */}
+      <section id="un-events">
+        <HoppinEvents />
+      </section>
       {/* ============================================================
           SECTION 5: THE 7 CORE ARCHITECTURAL SYSTEMS (THE DIRECTORY)
           ============================================================ */}

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 
-import HoppinEvents from './HoppinEvents';
 
 import { 
   Navigation, Compass, Radio, Users, Clock, Flame, 
@@ -1215,3 +1214,80 @@ export default function App() {
   );
 }
 
+// --- HOPPIN EVENTS COMPONENT --- 
+export function HoppinEvents() {
+  const [events, setEvents] = useState([
+    { id: 'e1', title: 'Milan - Annual Cultural Fest', category: 'Fest', location: 'TP Ganesan Auditorium', date: 'Oct 12, 2026', time: '10:00 AM', is_rsvpd: false },
+    { id: 'e2', title: 'ACM SIGAI Hackathon', category: 'Hackathon', location: 'Tech Park, 4th Floor', date: 'Oct 15, 2026', time: '08:00 AM', is_rsvpd: true },
+    { id: 'e3', title: 'Robotics Club Recruitment', category: 'Club Workshop', location: 'University Building (UB)', date: 'Oct 18, 2026', time: '04:30 PM', is_rsvpd: false },
+  ]);
+  const [activeTab, setActiveTab] = useState('ALL');
+
+  const toggleRSVP = (id) => {
+    setEvents((prev) =>
+      prev.map((event) => (event.id === id ? { ...event, is_rsvpd: !event.is_rsvpd } : event))
+    );
+  };
+
+  const visibleEvents = activeTab === 'RSVP' ? events.filter((e) => e.is_rsvpd) : events;
+
+  return (
+    <div className="w-full max-w-lg mx-auto py-10 px-4 text-white font-sans">
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-extrabold tracking-wide mb-2 flex items-center justify-center gap-2">
+          Campus <span className="text-[#00FF9D]">Radar</span> 📡
+        </h2>
+        <p className="text-slate-300 text-sm">Live updates for fests, hackathons, and club workshops.</p>
+      </div>
+
+      <div className="flex gap-4 mb-6 justify-center">
+        <button
+          onClick={() => setActiveTab('ALL')}
+          className={`px-5 py-2 rounded-full text-sm font-semibold border-2 transition-all ${
+            activeTab === 'ALL' ? 'border-[#00D1FF] text-[#00D1FF] bg-[#00D1FF]/10' : 'border-slate-700 text-slate-400'
+          }`}
+        >
+          Upcoming Events
+        </button>
+        <button
+          onClick={() => setActiveTab('RSVP')}
+          className={`px-5 py-2 rounded-full text-sm font-semibold border-2 transition-all ${
+            activeTab === 'RSVP' ? 'border-[#00FF9D] text-[#00FF9D] bg-[#00FF9D]/10' : 'border-slate-700 text-slate-400'
+          }`}
+        >
+          My Reminders
+        </button>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        {visibleEvents.length === 0 ? (
+          <div className="text-center py-10 bg-[#0B1521]/60 rounded-2xl border border-slate-800">
+            <p className="text-slate-400">Your schedule is clear. RSVP to events to see them here.</p>
+          </div>
+        ) : (
+          visibleEvents.map((event) => (
+            <div key={event.id} className="bg-[#0B1521]/80 border border-slate-800 p-5 rounded-xl shadow-lg">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full bg-[#00FF9D]/10 text-[#00FF9D] border border-[#00FF9D]/30">
+                  {event.category}
+                </span>
+                <span className="text-[#00FF9D] text-xs font-bold">{event.date}</span>
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">{event.title}</h3>
+              <p className="text-sm text-slate-400 mb-1">📍 {event.location}</p>
+              <p className="text-sm text-slate-400 mb-4">⏰ {event.time}</p>
+              <button
+                onClick={() => toggleRSVP(event.id)}
+                className={`w-full py-2 rounded-xl text-sm font-bold transition-all ${
+                  event.is_rsvpd ? 'bg-[#00FF9D]/20 text-[#00FF9D] border border-[#00FF9D]/50' : 'bg-white/5 text-white hover:bg-white/10'
+                }`}
+              >
+                {event.is_rsvpd ? '✓ Reminder Set' : 'Remind Me'}
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}

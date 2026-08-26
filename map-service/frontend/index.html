@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HOPPIN Campus Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  html, body { height: 100%; margin: 0; font-family: system-ui, sans-serif; }
+  #map { height: 100%; width: 100%; }
+
+  #panel {
+    position: absolute; top: 12px; left: 12px; z-index: 1000;
+    background: #fff; padding: 14px 16px; border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25); width: 280px;
+    font-size: 13px;
+  }
+  #panel h1 { font-size: 15px; margin: 0 0 10px; }
+  #panel label { display: block; margin: 8px 0 3px; font-weight: 600; }
+  #panel select, #panel button { width: 100%; padding: 6px; box-sizing: border-box; }
+  #panel button {
+    margin-top: 10px; background: #2563eb; color: #fff; border: none;
+    border-radius: 5px; padding: 8px; cursor: pointer; font-weight: 600;
+  }
+  #panel button:hover { background: #1d4ed8; }
+  #panel .row { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+  #routeStatus { margin-top: 8px; font-size: 12px; color: #555; min-height: 16px; }
+
+  #legend {
+    position: absolute; bottom: 24px; left: 12px; z-index: 1000;
+    background: #fff; padding: 10px 14px; border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25); font-size: 12px;
+  }
+  #legend div { display: flex; align-items: center; gap: 6px; margin: 3px 0; }
+  #legend span.dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+
+  .crowd-marker { border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 4px rgba(0,0,0,0.4); }
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div id="panel">
+  <h1>HOPPIN &mdash; Campus Route</h1>
+
+  <label for="startSelect">Start</label>
+  <select id="startSelect"></select>
+
+  <label for="endSelect">End</label>
+  <select id="endSelect"></select>
+
+  <div class="row">
+    <input type="checkbox" id="accessibleCheck" />
+    <label for="accessibleCheck" style="margin:0; font-weight:400;">Wheelchair-accessible only</label>
+  </div>
+
+  <button id="routeBtn">Find route</button>
+  <div id="routeStatus"></div>
+</div>
+
+<div id="legend">
+  <strong>Crowd density</strong>
+  <div><span class="dot" style="background:#22c55e;"></span> &lt; 50% &mdash; Quiet</div>
+  <div><span class="dot" style="background:#f97316;"></span> 50&ndash;80% &mdash; Moderate</div>
+  <div><span class="dot" style="background:#ef4444;"></span> &gt; 80% &mdash; High Queue</div>
+  <div><span class="dot" style="background:#94a3b8;"></span> No data yet</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  // Point this at your running FastAPI backend.
+  const API_BASE = "http://127.0.0.1:8000";
+
+  // SRM KTR campus, approximate center.
+  const CAMPUS_CENTER = [12.8231, 80.0444];
+
+  const map = L.map("map").setView(CAMPUS_CENTER, 16);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "&copy; OpenStreetMap contributors",
+    maxZoom: 19,
+  }).addTo(map);
+
+  let routeLayer = null;
+  let locationsById = {};
+  const markersById = {};
+
+  function colorForDensity(density) {
+    if (density === null || density === undefined) return "#94a3b8"; // grey = no data
+    if (density > 80) return "#ef4444"; // red
+    if (density >= 50) return "#f97316"; // orange
+    return "#22c55e"; // green
+  }
+
+  function densityMarker(feature) {
+    const [lng, lat] = feature.geometry.coordinates;
+    const props = feature.properties;
+    const color = colorForDensity(props.density_percent);
+
+    const marker = L.circleMarker([lat, lng], {
+      radius: 11,
+      fillColor: color,
+      color: "#fff",
+      weight: 2,
+      fillOpacity: 0.9,
+      className: "crowd-marker",
+    });
+
+    const densityText =
+      props.density_percent === null || props.density_percent === undefined
+        ? "No data yet"
+        : `${props.density_percent}% &mdash; ${props.status_label ?? ""}`;
+
+    marker.bindPopup(
+      `<strong>${props.name}</strong><br/>` +
+      `${props.category}<br/>` +
+      `${densityText}`
+    );
+
+    return marker;
+  }
+
+  async function loadLocations() {
+    const res = await fetch(`${API_BASE}/locations`);
+    if (!res.ok) throw new Error(`GET /locations failed: ${res.status}`);
+    const geojson = await res.json();
+
+    const startSelect = document.getElementById("startSelect");
+    const endSelect = document.getElementById("endSelect");
+    startSelect.innerHTML = "";
+    endSelect.innerHTML = "";
+
+    geojson.features.forEach((feature) => {
+      const marker = densityMarker(feature).addTo(map);
+      const id = feature.properties.id;
+      const [lng, lat] = feature.geometry.coordinates;
+
+      locationsById[id] = { lat, lng, name: feature.properties.name };
+      markersById[id] = marker;
+
+      [startSelect, endSelect].forEach((select) => {
+        const opt = document.createElement("option");
+        opt.value = id;
+        opt.textContent = feature.properties.name;
+        select.appendChild(opt);
+      });
+    });
+
+    if (endSelect.options.length > 1) endSelect.selectedIndex = 1;
+  }
+
+  async function findRoute() {
+    const status = document.getElementById("routeStatus");
+    const startId = document.getElementById("startSelect").value;
+    const endId = document.getElementById("endSelect").value;
+    const accessible = document.getElementById("accessibleCheck").checked;
+
+    if (!startId || !endId) return;
+    if (startId === endId) {
+      status.textContent = "Pick two different locations.";
+      return;
+    }
+
+    const start = locationsById[startId];
+    const end = locationsById[endId];
+
+    const url = new URL(`${API_BASE}/route`);
+    url.searchParams.set("start", `${start.lat},${start.lng}`);
+    url.searchParams.set("end", `${end.lat},${end.lng}`);
+    url.searchParams.set("accessible", accessible);
+
+    status.textContent = "Finding route...";
+
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`GET /route failed: ${res.status}`);
+      const feature = await res.json();
+
+      if (routeLayer) map.removeLayer(routeLayer);
+
+      const latlngs = feature.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+      routeLayer = L.polyline(latlngs, { color: "#2563eb", weight: 5, opacity: 0.8 }).addTo(map);
+      map.fitBounds(routeLayer.getBounds(), { padding: [40, 40] });
+
+      const source = feature.properties.source;
+      status.textContent =
+        source === "matched_path"
+          ? `Route: ${feature.properties.name}${feature.properties.is_wheelchair_accessible ? " (accessible)" : ""}`
+          : "No matching path in the network yet — showing a direct line.";
+    } catch (err) {
+      status.textContent = "Could not fetch a route. Is the backend running?";
+      console.error(err);
+    }
+  }
+
+  document.getElementById("routeBtn").addEventListener("click", findRoute);
+
+  loadLocations().catch((err) => {
+    console.error(err);
+    alert("Could not load /locations. Is the FastAPI backend running at " + API_BASE + "?");
+  });
+</script>
+
+</body>
+</html>

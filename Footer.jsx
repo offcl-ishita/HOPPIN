@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigation, ShieldCheck, MapPin, ExternalLink, Sparkles, Heart } from 'lucide-react';
-import logoImg from '../assets/hoppin_logo.png';
+import logoImg from './hoppin_logo.png';
 import './Footer.css';
 
 export default function Footer() {

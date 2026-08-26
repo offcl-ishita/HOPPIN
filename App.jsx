@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-import HoppiEvents from './HoppinEvents';
+import HoppinEvents from './HoppinEvents';
 
 import { 
   Navigation, Compass, Radio, Users, Clock, Flame, 

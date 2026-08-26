@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+
+import hoppinevents from './hoppinevents';
+
 import { 
   Navigation, Compass, Radio, Users, Clock, Flame, 
   MapPin, Bell, Shield, ArrowRight, ArrowUpRight, CheckCircle2,
@@ -1200,4 +1203,3 @@ export default function App() {
   );
 }
 
-import hoppinevents from './hoppinevents';

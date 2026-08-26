@@ -12,11 +12,11 @@ load_dotenv()
 
 app = FastAPI(title="HOPPIN Map Service", version="0.1.0")
 
-# TEMPORARY: defaults to "*" (any origin) so you can test against the
-# deployed backend before the frontend has a fixed domain. Once you have
-# your Vercel URL, set CORS_ORIGINS in Render/Railway to that exact URL
-# (e.g. https://hoppin.vercel.app) and redeploy — do not ship "*" to
-# production long-term.
+# TEMPORARY: defaults to "*" (any origin) so you can test before the
+# frontend has a fixed domain. Once you have your frontend's live URL, set
+# CORS_ORIGINS in Vercel's Project Settings -> Environment Variables to
+# that exact origin (e.g. https://hoppin.vercel.app) and redeploy — do not
+# ship "*" to production long-term.
 cors_origins = os.getenv("CORS_ORIGINS", "*")
 allow_origins = ["*"] if cors_origins.strip() == "*" else [o.strip() for o in cors_origins.split(",")]
 

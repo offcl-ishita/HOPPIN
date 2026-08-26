@@ -818,12 +818,8 @@ export default function App() {
 
         </div>
       </section>
-
-      </div>
            
-      {/* ============================================================
-          SECTION 3.5: UPCOMING EVENTS & RSVP
-          ============================================================ */}
+      {/* SECTION 3.5: UPCOMING EVENTS & RSVP*/}
       <section id="un-events">
         <HoppinEvents />
       </section>

@@ -37,9 +37,12 @@ export default function CampusMap() {
 
     const map = L.map(mapElRef.current, { zoomControl: true }).setView(CAMPUS_CENTER, 16);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-      maxZoom: 20,
+    // Plain OSM tiles -- no API key ever required. Darkened to match the
+    // site's theme via a CSS filter on .hop-leaflet-el (see CampusMap.css),
+    // since CARTO's free keyless dark tiles stopped working.
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19,
     }).addTo(map);
 
     markerLayerRef.current = L.layerGroup().addTo(map);

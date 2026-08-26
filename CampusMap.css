@@ -10,6 +10,12 @@
   height: 100%;
 }
 
+/* Darken plain OSM tiles to match the site's theme. Scoped to the tile
+   pane only, so markers/popups/controls keep their real colors. */
+.hop-leaflet-el .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9);
+}
+
 .hop-leaflet-el .leaflet-control-attribution {
   background: rgba(8, 12, 24, 0.75);
   color: var(--hop-text-muted);

@@ -1,0 +1,334 @@
+/* ============================================================
+   HOPPIN — Acadron-Inspired Floating Glass Pill Navbar
+   ============================================================ */
+
+.navbar-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  transition: padding 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (max-width: 640px) {
+  .navbar-wrapper {
+    padding: 8px 12px;
+  }
+}
+
+/* Glassmorphic Container Pill */
+.navbar-pill {
+  pointer-events: auto;
+  width: 100%;
+  max-width: 1200px;
+  min-height: 60px;
+  border-radius: 16px;
+  background: rgba(13, 19, 36, 0.85);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    0 12px 36px -4px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  transition: background 0.2s ease,
+              box-shadow 0.25s ease,
+              border-color 0.2s ease;
+}
+
+/* Scrolled state */
+.navbar-wrapper.is-scrolled .navbar-pill {
+  background: rgba(10, 15, 28, 0.95);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.3),
+    0 16px 44px -6px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Expanded state on mobile open */
+.navbar-pill.is-mobile-open {
+  background: #0D1324 !important;
+  border-color: rgba(16, 231, 157, 0.3) !important;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Top Header Row */
+.navbar-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 58px;
+  padding: 0 10px 0 18px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .navbar-top-row {
+    padding: 0 12px 0 22px;
+    height: 62px;
+  }
+}
+
+/* Logo */
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: opacity 0.18s ease;
+}
+
+.nav-logo:hover {
+  opacity: 0.9;
+}
+
+.nav-logo-img {
+  height: 38px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+  border-radius: 6px;
+  transition: transform 0.18s ease;
+}
+
+@media (max-width: 480px) {
+  .nav-logo-img {
+    height: 32px;
+  }
+}
+
+.nav-logo-domain {
+  font-size: 12px;
+  font-weight: 700;
+  color: #38BDF8;
+  letter-spacing: -0.02em;
+}
+
+.nav-live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  background: rgba(16, 231, 157, 0.1);
+  border: 1px solid rgba(16, 231, 157, 0.25);
+  font-size: 9px;
+  font-weight: 700;
+  color: #10E79D;
+  margin-left: 6px;
+}
+
+.nav-pulse-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #10E79D;
+  box-shadow: 0 0 6px #10E79D;
+  animation: navHopPulse 1.8s infinite;
+}
+
+@keyframes navHopPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
+
+/* Desktop Navigation Links */
+.nav-links {
+  display: none;
+  list-style: none;
+  align-items: center;
+  gap: 2px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+@media (min-width: 960px) {
+  .nav-links {
+    display: flex;
+  }
+}
+
+.nav-link {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 600;
+  color: #94A3B8;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  color: #F8FAFC;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Right Actions & Mobile Toggle */
+.nav-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Tactile Modern CTA Button */
+.nav-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #10E79D 0%, #059669 100%);
+  color: #042F24;
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(16, 231, 157, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.nav-cta-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(16, 231, 157, 0.4);
+  background: linear-gradient(135deg, #34EEA9 0%, #10E79D 100%);
+}
+
+.nav-cta-btn:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 580px) {
+  .nav-cta-btn {
+    display: none;
+  }
+}
+
+.nav-mobile-toggle-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #F8FAFC;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s ease;
+}
+
+.nav-mobile-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 959px) {
+  .nav-mobile-toggle-btn {
+    display: flex;
+  }
+}
+
+/* Mobile Dropdown Drawer (Inside the Pill Container) */
+.nav-mobile-drawer {
+  padding: 10px 12px 16px;
+  background: #0D1324;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.nav-mobile-links-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-mob-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.nav-mob-item:hover, .nav-mob-item:active {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-mob-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.nav-mob-item div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.nav-mob-item strong {
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  color: #F8FAFC;
+}
+
+.nav-mob-item span {
+  font-size: 11px;
+  color: #64748B;
+}
+
+.nav-mob-cta-box {
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 4px;
+}
+
+.nav-mob-cta-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #10E79D 0%, #059669 100%);
+  color: #042F24;
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(16, 231, 157, 0.3);
+}

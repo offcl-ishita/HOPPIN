@@ -623,8 +623,8 @@ export default function App() {
               The real SRM KTR map, <span className="hop-text-gradient">reading live crowd density.</span>
             </h2>
             <p className="hop-section-desc">
-              Pick a start and end point below to get a route across campus — filtered for wheelchair
-              accessibility if you need it. Marker color shows current crowd density at each venue.
+              Pick a start and end point below to get a route across campus. Marker color shows
+              current crowd density at each venue.
             </p>
           </div>
 
@@ -684,9 +684,8 @@ export default function App() {
                   <div className="step-title">
                     <strong>How routing works</strong>
                   </div>
-                  <p>Matches your trip against SRM KTR's mapped walking paths, honoring the accessible-only
-                    filter when you set it. Falls back to a direct line when no mapped path covers that
-                    stretch yet.</p>
+                  <p>Routes are computed live by OSRM's public routing network and drawn as the purple
+                    line, with estimated distance and travel time shown below the map controls.</p>
                 </div>
               </div>
 

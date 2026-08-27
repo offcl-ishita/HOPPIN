@@ -10,10 +10,9 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
 
 // Public OSRM demo instance -- no key needed, but it's explicitly not a
 // production service (no uptime guarantee, aggressive rate limits) and its
-// public profile is "driving" only (no walking profile available), so this
-// is used as a supplementary distance/duration estimate, not the primary
-// campus route -- that stays the accessible-aware /route call against our
-// own backend.
+// public profile is "driving" only (no walking profile available). This is
+// the sole route source: our own backend's accessible-aware /route call was
+// removed here in favor of OSRM-only routing.
 const OSRM_BASE = 'https://router.project-osrm.org/route/v1/driving';
 
 const CAMPUS_CENTER = [12.8231, 80.0444]; // SRM KTR, approximate
@@ -44,19 +43,16 @@ export default function CampusMap() {
   const markerLayerRef = useRef(null);
   const routeLayerRef = useRef(null);
   const userMarkerRef = useRef(null);
-  const osrmLayerRef = useRef(null);
   const hasCenteredOnUserRef = useRef(false);
 
   const [features, setFeatures] = useState([]);
   const [status, setStatus] = useState('loading'); // loading | ready | offline
   const [startId, setStartId] = useState('');
   const [endId, setEndId] = useState('');
-  const [accessibleOnly, setAccessibleOnly] = useState(false);
   const [routeNote, setRouteNote] = useState('');
   const [routing, setRouting] = useState(false);
   const [geoError, setGeoError] = useState('');
   const [userPosition, setUserPosition] = useState(null);
-  const [osrmEstimate, setOsrmEstimate] = useState(null); // { distanceKm, durationMin }
 
   // ---- map init (once) ----
   useEffect(() => {
@@ -210,50 +206,9 @@ export default function CampusMap() {
     const [startLng, startLat] = start.geometry.coordinates;
     const [endLng, endLat] = end.geometry.coordinates;
 
-    const url = new URL(`${API_BASE}/route`);
-    url.searchParams.set('start', `${startLat},${startLng}`);
-    url.searchParams.set('end', `${endLat},${endLng}`);
-    url.searchParams.set('accessible', accessibleOnly);
-
     setRouting(true);
     setRouteNote('Finding route...');
-    setOsrmEstimate(null);
 
-    // Fire the supplementary OSRM estimate independently -- it must never
-    // block or fail the primary accessible-route result above.
-    fetchOsrmEstimate(map, startLat, startLng, endLat, endLng);
-
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`GET /route failed: ${res.status}`);
-      const feature = await res.json();
-
-      if (routeLayerRef.current) {
-        map.removeLayer(routeLayerRef.current);
-      }
-
-      const latlngs = feature.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
-      const line = L.polyline(latlngs, { color: '#38BDF8', weight: 5, opacity: 0.85 }).addTo(map);
-      routeLayerRef.current = line;
-      map.fitBounds(line.getBounds(), { padding: [32, 32] });
-
-      setRouteNote(
-        feature.properties.source === 'matched_path'
-          ? `${feature.properties.name}${feature.properties.is_wheelchair_accessible ? ' · accessible' : ''}`
-          : 'No matching path yet — showing a direct line.'
-      );
-    } catch (err) {
-      console.error(err);
-      setRouteNote('Could not fetch a route. Is the map backend running?');
-    } finally {
-      setRouting(false);
-    }
-  };
-
-  // Supplementary estimate only -- OSRM's public demo server is
-  // driving-profile only and not production-grade, so failures here are
-  // swallowed rather than surfaced as the main routing error.
-  const fetchOsrmEstimate = async (map, startLat, startLng, endLat, endLng) => {
     try {
       const osrmUrl = `${OSRM_BASE}/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`;
       const res = await fetch(osrmUrl);
@@ -262,24 +217,23 @@ export default function CampusMap() {
       const route = data.routes && data.routes[0];
       if (!route) throw new Error('No OSRM route found');
 
-      if (osrmLayerRef.current) {
-        map.removeLayer(osrmLayerRef.current);
+      if (routeLayerRef.current) {
+        map.removeLayer(routeLayerRef.current);
       }
-      const osrmLatLngs = route.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
-      osrmLayerRef.current = L.polyline(osrmLatLngs, {
-        color: '#A855F7',
-        weight: 4,
-        opacity: 0.75,
-        dashArray: '6 8',
-      }).addTo(map);
 
-      setOsrmEstimate({
-        distanceKm: (route.distance / 1000).toFixed(1),
-        durationMin: Math.round(route.duration / 60),
-      });
+      const latlngs = route.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+      const line = L.polyline(latlngs, { color: '#A855F7', weight: 5, opacity: 0.85 }).addTo(map);
+      routeLayerRef.current = line;
+      map.fitBounds(line.getBounds(), { padding: [32, 32] });
+
+      const distanceKm = (route.distance / 1000).toFixed(1);
+      const durationMin = Math.round(route.duration / 60);
+      setRouteNote(`${distanceKm} km · ${durationMin} min (driving-network estimate)`);
     } catch (err) {
-      console.error('OSRM estimate unavailable:', err);
-      setOsrmEstimate(null);
+      console.error(err);
+      setRouteNote('Could not fetch a route right now — the routing service may be rate-limited. Try again shortly.');
+    } finally {
+      setRouting(false);
     }
   };
 
@@ -330,14 +284,6 @@ export default function CampusMap() {
           </div>
 
           <div className="hop-map-controls-row">
-            <label className="hop-map-checkbox">
-              <input
-                type="checkbox"
-                checked={accessibleOnly}
-                onChange={(e) => setAccessibleOnly(e.target.checked)}
-              />
-              <span>Accessible only</span>
-            </label>
             <button className="hop-map-btn hop-map-btn-primary" onClick={findRoute} disabled={routing || status === 'loading'}>
               {routing ? <Loader2 size={13} className="hop-spin" /> : <Navigation2 size={13} />}
               <span>Find route</span>
@@ -345,11 +291,6 @@ export default function CampusMap() {
           </div>
 
           {routeNote && <div className="hop-map-route-note mono">{routeNote}</div>}
-          {osrmEstimate && (
-            <div className="hop-map-route-note mono hop-map-osrm-note">
-              Driving-network estimate: {osrmEstimate.distanceKm} km · {osrmEstimate.durationMin} min
-            </div>
-          )}
         </div>
       )}
 

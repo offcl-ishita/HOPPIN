@@ -42,12 +42,7 @@ export default function Navbar() {
                 Bypass Map
               </a>
             </li>
-            <li>
-              <a href="#un-calculator" className="nav-link">
-                Time Reclaimed
-              </a>
-            </li>
-            <li>
+            
   <a href="#un-eateries" className="nav-link">
     Eateries
   </a>
@@ -57,6 +52,12 @@ export default function Navbar() {
                 Events
               </a>
             </li>
+          <li>
+              <a href="#un-calculator" className="nav-link">
+                Time Reclaimed
+              </a>
+            </li>
+            <li>
             <li>
               <a href="#un-partners" className="nav-link">
                 Campus Perks
@@ -120,19 +121,7 @@ export default function Navbar() {
                 </div>
               </a>
 
-              <a
-                href="#un-calculator"
-                className="nav-mob-item"
-                onClick={() => setMobileOpen(false)}
-              >
-                <div className="nav-mob-icon" style={{ color: '#F59E0B', background: 'rgba(245, 158, 11, 0.12)' }}>
-                  <Sliders size={16} />
-                </div>
-                <div>
-                  <strong>Time Reclaimed Calculator</strong>
-                  <span>Interactive semester hours saved estimator</span>
-                </div>
-              </a>
+              
 <a 
   href="#un-eateries" 
   className="nav-mob-item"
@@ -159,7 +148,19 @@ export default function Navbar() {
                   <span>Fests, hackathons, seminars & RSVPs</span>
                 </div>
               </a>
-
+<a
+                href="#un-calculator"
+                className="nav-mob-item"
+                onClick={() => setMobileOpen(false)}
+              >
+                <div className="nav-mob-icon" style={{ color: '#F59E0B', background: 'rgba(245, 158, 11, 0.12)' }}>
+                  <Sliders size={16} />
+                </div>
+                <div>
+                  <strong>Time Reclaimed Calculator</strong>
+                  <span>Interactive semester hours saved estimator</span>
+                </div>
+              </a>
               <a
                 href="#un-partners"
                 className="nav-mob-item"

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
-import { RefreshCw, Navigation2, Loader2, WifiOff, LocateFixed, AlertTriangle } from 'lucide-react';
+import { RefreshCw, Navigation2, Loader2, WifiOff, LocateFixed, AlertTriangle, Accessibility, Info } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import './CampusMap.css';
 
@@ -8,12 +8,43 @@ import './CampusMap.css';
 // with VITE_API_BASE (see .env.example) once it's deployed somewhere real.
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
 
-// Public OSRM demo instance -- no key needed, but it's explicitly not a
-// production service (no uptime guarantee, aggressive rate limits) and its
-// public profile is "driving" only (no walking profile available). This is
-// the sole route source: our own backend's accessible-aware /route call was
-// removed here in favor of OSRM-only routing.
-const OSRM_BASE = 'https://router.project-osrm.org/route/v1/driving';
+// Public OSRM demo instance -- no key needed, but explicitly not a
+// production service (no uptime guarantee, aggressive rate limits).
+const OSRM_BASE = 'https://router.project-osrm.org/route/v1';
+
+const ACCESSIBLE_DISCLAIMER =
+  'Prioritizes paved paths and avoids stairs where road data allows. May not ' +
+  'reflect tactile paving, audio signals, or real-time obstructions.';
+
+// ---------------------------------------------------------------------------
+// Route provider. Returns { coordinates: [[lat,lng],...], distanceMeters,
+// durationSeconds } for a start/end pair and an "accessible" flag.
+//
+// Currently: OSRM's public "foot" profile when accessible is requested (a
+// real pedestrian-network route, but NOT wheelchair-aware -- it has no
+// concept of stairs/kerbs/ramps), "driving" otherwise.
+//
+// Swap point for a real campus accessibility dataset: replace this
+// function's body with a lookup against your own GeoJSON (ramps, stairs,
+// tactile paving, blocked paths) when accessible is true, keeping the same
+// return shape so findRoute() below doesn't need to change.
+// ---------------------------------------------------------------------------
+async function getRouteGeometry({ startLng, startLat, endLng, endLat, accessible }) {
+  const profile = accessible ? 'foot' : 'driving';
+  const url = `${OSRM_BASE}/${profile}/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`;
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`OSRM request failed: ${res.status}`);
+  const data = await res.json();
+  const route = data.routes && data.routes[0];
+  if (!route) throw new Error('No route found');
+
+  return {
+    coordinates: route.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
+    distanceMeters: route.distance,
+    durationSeconds: route.duration,
+  };
+}
 
 const CAMPUS_CENTER = [12.8231, 80.0444]; // SRM KTR, approximate
 
@@ -42,6 +73,7 @@ export default function CampusMap() {
   const mapRef = useRef(null);
   const markerLayerRef = useRef(null);
   const routeLayerRef = useRef(null);
+  const routeIconRef = useRef(null);
   const userMarkerRef = useRef(null);
   const hasCenteredOnUserRef = useRef(false);
 
@@ -49,6 +81,7 @@ export default function CampusMap() {
   const [status, setStatus] = useState('loading'); // loading | ready | offline
   const [startId, setStartId] = useState('');
   const [endId, setEndId] = useState('');
+  const [accessibleOnly, setAccessibleOnly] = useState(false);
   const [routeNote, setRouteNote] = useState('');
   const [routing, setRouting] = useState(false);
   const [geoError, setGeoError] = useState('');
@@ -209,26 +242,50 @@ export default function CampusMap() {
     setRouting(true);
     setRouteNote('Finding route...');
 
-    try {
-      const osrmUrl = `${OSRM_BASE}/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`;
-      const res = await fetch(osrmUrl);
-      if (!res.ok) throw new Error(`OSRM request failed: ${res.status}`);
-      const data = await res.json();
-      const route = data.routes && data.routes[0];
-      if (!route) throw new Error('No OSRM route found');
+    // Clear any previous route line/icon before drawing the new one -- same
+    // refs are reused for both accessible and normal routes, so toggling the
+    // checkbox and re-running never leaves a stale line behind.
+    if (routeLayerRef.current) {
+      map.removeLayer(routeLayerRef.current);
+      routeLayerRef.current = null;
+    }
+    if (routeIconRef.current) {
+      map.removeLayer(routeIconRef.current);
+      routeIconRef.current = null;
+    }
 
-      if (routeLayerRef.current) {
-        map.removeLayer(routeLayerRef.current);
+    try {
+      const route = await getRouteGeometry({ startLng, startLat, endLng, endLat, accessible: accessibleOnly });
+
+      const color = accessibleOnly ? '#14B8A6' : '#A855F7';
+      const line = L.polyline(route.coordinates, {
+        color,
+        weight: 5,
+        opacity: 0.85,
+        dashArray: '6 8',
+      }).addTo(map);
+      routeLayerRef.current = line;
+
+      if (accessibleOnly) {
+        const startLatLng = route.coordinates[0];
+        routeIconRef.current = L.marker(startLatLng, {
+          icon: L.divIcon({
+            className: 'hop-map-accessible-icon',
+            html: '<div class="hop-map-accessible-icon-inner">&#9855;</div>',
+            iconSize: [26, 26],
+            iconAnchor: [13, 13],
+          }),
+        })
+          .bindPopup('Accessible route start')
+          .addTo(map);
       }
 
-      const latlngs = route.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
-      const line = L.polyline(latlngs, { color: '#A855F7', weight: 5, opacity: 0.85 }).addTo(map);
-      routeLayerRef.current = line;
       map.fitBounds(line.getBounds(), { padding: [32, 32] });
 
-      const distanceKm = (route.distance / 1000).toFixed(1);
-      const durationMin = Math.round(route.duration / 60);
-      setRouteNote(`${distanceKm} km · ${durationMin} min (driving-network estimate)`);
+      const distanceKm = (route.distanceMeters / 1000).toFixed(1);
+      const durationMin = Math.round(route.durationSeconds / 60);
+      const label = accessibleOnly ? 'Accessible route estimate' : 'Driving-network estimate';
+      setRouteNote(`${label}: ${distanceKm} km · ${durationMin} min`);
     } catch (err) {
       console.error(err);
       setRouteNote('Could not fetch a route right now — the routing service may be rate-limited. Try again shortly.');
@@ -284,6 +341,16 @@ export default function CampusMap() {
           </div>
 
           <div className="hop-map-controls-row">
+            <label className="hop-map-checkbox">
+              <input
+                type="checkbox"
+                checked={accessibleOnly}
+                onChange={(e) => setAccessibleOnly(e.target.checked)}
+              />
+              <Accessibility size={13} />
+              <span>Accessible only</span>
+              <Info size={12} className="hop-map-info-icon" title={ACCESSIBLE_DISCLAIMER} />
+            </label>
             <button className="hop-map-btn hop-map-btn-primary" onClick={findRoute} disabled={routing || status === 'loading'}>
               {routing ? <Loader2 size={13} className="hop-spin" /> : <Navigation2 size={13} />}
               <span>Find route</span>

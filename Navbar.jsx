@@ -42,7 +42,7 @@ export default function Navbar() {
                 Bypass Map
               </a>
             </li>
-            
+<li>      
   <a href="#un-eateries" className="nav-link">
     Eateries
   </a>

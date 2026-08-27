@@ -86,8 +86,12 @@
   const map = L.map("map", {
     maxBounds: CAMPUS_BOUNDS,
     maxBoundsViscosity: 1.0,
-    minZoom: 15,
   }).setView(CAMPUS_CENTER, 16);
+
+  // A fixed minZoom guess can still let you zoom out past the bounds on a
+  // wide viewport -- getBoundsZoom() computes the most-zoomed-out level at
+  // which CAMPUS_BOUNDS still exactly fills this specific page, so it can't.
+  map.setMinZoom(map.getBoundsZoom(CAMPUS_BOUNDS));
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "&copy; OpenStreetMap contributors",

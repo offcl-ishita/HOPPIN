@@ -134,14 +134,20 @@ export default function CampusMap() {
     if (!mapElRef.current || mapElRef.current._leaflet_id) return;
 
     // maxBoundsViscosity: 1.0 makes the bounds fully solid -- panning stops
-    // dead at the edge instead of elastically bouncing back, and minZoom
-    // stops zooming out far enough to see much beyond campus either.
+    // dead at the edge instead of elastically bouncing back.
     const map = L.map(mapElRef.current, {
       zoomControl: true,
       maxBounds: CAMPUS_BOUNDS,
       maxBoundsViscosity: 1.0,
-      minZoom: 15,
     }).setView(CAMPUS_CENTER, 16);
+
+    // A fixed minZoom guess can still let you zoom out far enough to see
+    // past the bounds if the map container is wide (more viewport = more
+    // visible area at the same zoom level). getBoundsZoom() computes the
+    // most-zoomed-out level at which CAMPUS_BOUNDS still exactly fills
+    // this specific container, so "zoomed all the way out" never shows
+    // beyond campus regardless of screen size.
+    map.setMinZoom(map.getBoundsZoom(CAMPUS_BOUNDS));
 
     // Plain OSM tiles -- no API key ever required. Darkened to match the
     // site's theme via a CSS filter on .hop-leaflet-el (see CampusMap.css),

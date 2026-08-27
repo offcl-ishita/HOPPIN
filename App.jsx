@@ -1754,36 +1754,59 @@ export function HoppinEvents() {
    HOPPIN EATERIES — ON-CAMPUS DINING DIRECTORY
    ============================================================ */
 
+/* ============================================================
+   HOPPIN EATERIES — ON-CAMPUS DINING DIRECTORY WITH SAVED FEATURE
+   ============================================================ */
+
 export function HoppinEateries() {
-  const [eateries] = useState([
-    { id: 'et1', name: "Goldie's Grill and Shawarma", location: "UB Ground Floor", zone: "UB", contact: "9884562815", type: "Grill & Fast Food" },
-    { id: 'et2', name: "Seema's Cafe", location: "UB First Floor", zone: "UB", contact: "9940304021", type: "Cafe & Snacks" },
-    { id: 'et3', name: "Mr. Burger", location: "UB First Floor", zone: "UB", contact: "9566172442", type: "Fast Food" },
-    { id: 'et4', name: "Fritesphere", location: "UB First Floor", zone: "UB", contact: "7200790233", type: "Fries & Quick Bites" },
-    { id: 'et5', name: "Chaat Addaa", location: "UB First Floor", zone: "UB", contact: "9884988331", type: "Street Food & Chaat" },
-    { id: 'et6', name: "SRM Evergreen", location: "UB First Floor", zone: "UB", contact: "N/A", type: "Meals & Snacks" },
-    { id: 'et7', name: "Java (Food Court)", location: "Near Clock Tower", zone: "Java", contact: "8637674853", type: "Main Food Court" },
-    { id: 'et8', name: "Queen's Court", location: "Java Food Court", zone: "Java", contact: "N/A", type: "Multi-Cuisine" },
-    { id: 'et9', name: "Subway", location: "Java Food Court", zone: "Java", contact: "N/A", type: "Submarines & Salads" },
-    { id: 'et10', name: "Loaded Fries", location: "Java Food Court", zone: "Java", contact: "N/A", type: "Snacks" },
-    { id: 'et11', name: "Shakes and Desserts", location: "Java Food Court", zone: "Java", contact: "N/A", type: "Beverages & Desserts" },
-    { id: 'et12', name: "Classic Biryani", location: "Java Food Court", zone: "Java", contact: "N/A", type: "Biryani & Rice" },
-    { id: 'et13', name: "Genz Beta Cafe", location: "Near Hotel Management Block", zone: "Other", contact: "7397777942", type: "Modern Cafe" },
-    { id: 'et14', name: "Domino's Pizza", location: "Vendhar Square", zone: "Vendhar", contact: "18002081234", type: "Pizza & Italian" },
-    { id: 'et15', name: "Zinger", location: "Vendhar Square", zone: "Vendhar", contact: "N/A", type: "Fast Food" },
-    { id: 'et16', name: "Triangle Social Cafe", location: "Vendhar Square", zone: "Vendhar", contact: "N/A", type: "Social Cafe" },
-    { id: 'et17', name: "Slice Of Life", location: "Beside SRM Medical College", zone: "Medical", contact: "9786535984", type: "Cafe & Beverages" },
+  const [eateries, setEateries] = useState([
+    { id: 'et1', name: "Goldie's Grill and Shawarma", location: "UB Ground Floor", zone: "UB", contact: "9884562815", type: "Grill & Fast Food", isSaved: false },
+    { id: 'et2', name: "Seema's Cafe", location: "UB First Floor", zone: "UB", contact: "9940304021", type: "Cafe & Snacks", isSaved: false },
+    { id: 'et3', name: "Mr. Burger", location: "UB First Floor", zone: "UB", contact: "9566172442", type: "Fast Food", isSaved: false },
+    { id: 'et4', name: "Fritesphere", location: "UB First Floor", zone: "UB", contact: "7200790233", type: "Fries & Quick Bites", isSaved: false },
+    { id: 'et5', name: "Chaat Addaa", location: "UB First Floor", zone: "UB", contact: "9884988331", type: "Street Food & Chaat", isSaved: false },
+    { id: 'et6', name: "SRM Evergreen", location: "UB First Floor", zone: "UB", contact: "N/A", type: "Meals & Snacks", isSaved: false },
+    { id: 'et7', name: "Java (Food Court)", location: "Near Clock Tower", zone: "Java", contact: "8637674853", type: "Main Food Court", isSaved: false },
+    { id: 'et8', name: "Queen's Court", location: "Java Food Court", zone: "Java", contact: "N/A", type: "Multi-Cuisine", isSaved: false },
+    { id: 'et9', name: "Subway", location: "Java Food Court", zone: "Java", contact: "N/A", type: "Submarines & Salads", isSaved: false },
+    { id: 'et10', name: "Loaded Fries", location: "Java Food Court", zone: "Java", contact: "N/A", type: "Snacks", isSaved: false },
+    { id: 'et11', name: "Shakes and Desserts", location: "Java Food Court", zone: "Java", contact: "N/A", type: "Beverages & Desserts", isSaved: false },
+    { id: 'et12', name: "Classic Biryani", location: "Java Food Court", zone: "Java", contact: "N/A", type: "Biryani & Rice", isSaved: false },
+    { id: 'et13', name: "Genz Beta Cafe", location: "Near Hotel Management Block", zone: "Other", contact: "7397777942", type: "Modern Cafe", isSaved: false },
+    { id: 'et14', name: "Domino's Pizza", location: "Vendhar Square", zone: "Vendhar", contact: "18002081234", type: "Pizza & Italian", isSaved: false },
+    { id: 'et15', name: "Zinger", location: "Vendhar Square", zone: "Vendhar", contact: "N/A", type: "Fast Food", isSaved: false },
+    { id: 'et16', name: "Triangle Social Cafe", location: "Vendhar Square", zone: "Vendhar", contact: "N/A", type: "Social Cafe", isSaved: false },
+    { id: 'et17', name: "Slice Of Life", location: "Beside SRM Medical College", zone: "Medical", contact: "9786535984", type: "Cafe & Beverages", isSaved: false },
   ]);
 
   const [activeZone, setActiveZone] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
+  /* Save / Bookmark Toggle */
+  const toggleSaveEatery = (id) => {
+    setEateries((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, isSaved: !item.isSaved } : item
+      )
+    );
+  };
+
   const filteredEateries = eateries.filter((item) => {
-    const matchesZone = activeZone === 'ALL' || item.zone.toUpperCase() === activeZone;
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.location.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesZone =
+      activeZone === 'ALL'
+        ? true
+        : activeZone === 'SAVED'
+        ? item.isSaved
+        : item.zone.toUpperCase() === activeZone;
+
+    const matchesSearch =
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.location.toLowerCase().includes(searchQuery.toLowerCase());
+
     return matchesZone && matchesSearch;
   });
+
+  const savedCount = eateries.filter((item) => item.isSaved).length;
 
   return (
     <section
@@ -1828,10 +1851,11 @@ export function HoppinEateries() {
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {[
               ['ALL', 'All Spots'],
-              ['UB', 'University Building (UB)'],
+              ['UB', 'UB Building'],
               ['JAVA', 'Java Food Court'],
               ['VENDHAR', 'Vendhar Square'],
-              ['MEDICAL', 'Medical Block']
+              ['MEDICAL', 'Medical Block'],
+              ['SAVED', `My Saved (${savedCount})`]
             ].map(([val, label]) => (
               <button
                 key={val}
@@ -1879,67 +1903,100 @@ export function HoppinEateries() {
 
         {/* Eateries Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '18px' }}>
-          {filteredEateries.map((item) => (
-            <div
-              key={item.id}
-              style={{
-                background: 'linear-gradient(145deg, rgba(8,17,23,0.98), rgba(2,11,14,0.98))',
-                border: '1px solid rgba(148,163,184,0.12)',
-                borderRadius: '20px',
-                padding: '22px',
-                position: 'relative',
-                transition: 'all 0.25s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.borderColor = 'rgba(16,231,157,0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.borderColor = 'rgba(148,163,184,0.12)';
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <span style={{
-                  color: '#38BDF8',
-                  background: 'rgba(56,189,248,0.08)',
-                  border: '1px solid rgba(56,189,248,0.2)',
-                  padding: '4px 8px',
-                  borderRadius: '999px',
-                  fontSize: '9px',
-                  fontFamily: 'monospace',
-                  fontWeight: 700
-                }}>
-                  {item.type}
-                </span>
-                <span style={{ color: '#10E79D', fontSize: '9px', fontFamily: 'monospace' }}>● ON-CAMPUS</span>
-              </div>
-
-              <h3 style={{ color: '#F8FAFC', fontSize: '18px', margin: '0 0 8px', lineHeight: 1.25 }}>
-                {item.name}
-              </h3>
-
-              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', color: '#94A3B8', fontSize: '11px', marginBottom: '12px' }}>
-                <MapPin size={13} className="text-mint" />
-                <span>{item.location}</span>
-              </div>
-
-              <div style={{
-                background: '#020B0E',
-                border: '1px solid rgba(148,163,184,0.1)',
-                borderRadius: '10px',
-                padding: '10px 12px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                fontFamily: 'monospace',
-                fontSize: '10px'
-              }}>
-                <span style={{ color: '#64748B' }}>DIRECT CONTACT</span>
-                <span style={{ color: '#CBD5E1' }}>{item.contact}</span>
-              </div>
+          {filteredEateries.length === 0 ? (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '60px 20px', background: '#081117', border: '1px solid rgba(148,163,184,0.12)', borderRadius: '20px' }}>
+              <Bookmark size={30} style={{ color: '#475569', marginBottom: '12px' }} />
+              <h3 style={{ color: '#CBD5E1', margin: '0 0 6px' }}>No saved eateries found</h3>
+              <p style={{ color: '#64748B', fontSize: '13px', margin: 0 }}>Click the bookmark button on any eatery card to save it here.</p>
             </div>
-          ))}
+          ) : (
+            filteredEateries.map((item) => (
+              <div
+                key={item.id}
+                style={{
+                  background: 'linear-gradient(145deg, rgba(8,17,23,0.98), rgba(2,11,14,0.98))',
+                  border: item.isSaved ? '1px solid rgba(16,231,157,0.45)' : '1px solid rgba(148,163,184,0.12)',
+                  borderRadius: '20px',
+                  padding: '22px',
+                  position: 'relative',
+                  transition: 'all 0.25s ease',
+                  boxShadow: item.isSaved ? '0 0 25px rgba(16,231,157,0.08)' : 'none'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <span style={{
+                    color: '#38BDF8',
+                    background: 'rgba(56,189,248,0.08)',
+                    border: '1px solid rgba(56,189,248,0.2)',
+                    padding: '4px 8px',
+                    borderRadius: '999px',
+                    fontSize: '9px',
+                    fontFamily: 'monospace',
+                    fontWeight: 700
+                  }}>
+                    {item.type}
+                  </span>
+                  
+                  {item.isSaved ? (
+                    <span style={{ color: '#10E79D', fontSize: '9px', fontFamily: 'monospace' }}>● SAVED SPOT</span>
+                  ) : (
+                    <span style={{ color: '#64748B', fontSize: '9px', fontFamily: 'monospace' }}>ON-CAMPUS</span>
+                  )}
+                </div>
+
+                <h3 style={{ color: '#F8FAFC', fontSize: '18px', margin: '0 0 8px', lineHeight: 1.25 }}>
+                  {item.name}
+                </h3>
+
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center', color: '#94A3B8', fontSize: '11px', marginBottom: '16px' }}>
+                  <MapPin size={13} className="text-mint" />
+                  <span>{item.location}</span>
+                </div>
+
+                <div style={{
+                  background: '#020B0E',
+                  border: '1px solid rgba(148,163,184,0.1)',
+                  borderRadius: '10px',
+                  padding: '10px 12px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  fontFamily: 'monospace',
+                  fontSize: '10px',
+                  marginBottom: '14px'
+                }}>
+                  <span style={{ color: '#64748B' }}>DIRECT CONTACT</span>
+                  <span style={{ color: '#CBD5E1' }}>{item.contact}</span>
+                </div>
+
+                {/* Save / Bookmark Button */}
+                <button
+                  onClick={() => toggleSaveEatery(item.id)}
+                  style={{
+                    width: '100%',
+                    border: item.isSaved ? '1px solid rgba(16,231,157,0.6)' : '1px solid rgba(148,163,184,0.2)',
+                    background: item.isSaved ? 'rgba(16,231,157,0.12)' : 'rgba(255,255,255,0.03)',
+                    color: item.isSaved ? '#10E79D' : '#CBD5E1',
+                    padding: '10px',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    fontFamily: 'monospace',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <Bookmark size={13} />
+                  {item.isSaved ? 'SAVED TO FAVOURITES' : 'SAVE SPOT'}
+                </button>
+
+              </div>
+            ))
+          )}
         </div>
 
       </div>

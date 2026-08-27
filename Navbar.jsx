@@ -38,6 +38,28 @@ export default function Navbar() {
               </a>
             </li>
             <li>
+              <a href="#hoppin-events" className="nav-link">
+                Events
+              </a>
+            </li>
+
+            <li>
+              <a href="#un-directory" className="nav-link">
+                7 Systems
+              </a>
+            </li>
+            <li>
+              <a href="#un-partners" className="nav-link">
+                Campus Perks
+              </a>
+            </li>
+            <li>
+              <a href="#un-faq" className="nav-link">
+                FAQ
+              </a>
+            </li>
+          </ul>
+            <li>
               <a href="#un-map-simulator" className="nav-link">
                 Bypass Map
               </a>
@@ -126,6 +148,33 @@ export default function Navbar() {
                 <div>
                   <strong>Time Reclaimed Calculator</strong>
                   <span>Interactive semester hours saved estimator</span>
+                </div>
+              </a>
+              <a 
+                href="#hoppin-events" 
+                className="nav-mob-item"
+                onClick={() => setMobileOpen(false)}
+              >
+                <div className="nav-mob-icon" style={{ color: '#10E79D', background: 'rgba(16, 231, 157, 0.12)' }}>
+                  <Sparkles size={16} />
+                </div>
+                <div>
+                  <strong>Campus Event Radar</strong>
+                  <span>Fests, hackathons, seminars & RSVPs</span>
+                </div>
+              </a>
+
+              <a 
+                href="#un-directory" 
+                className="nav-mob-item"
+                onClick={() => setMobileOpen(false)}
+              >
+                <div className="nav-mob-icon" style={{ color: '#A855F7', background: 'rgba(168, 85, 247, 0.12)' }}>
+                  <Layers size={16} />
+                </div>
+                <div>
+                  <strong>7-Module Architecture</strong>
+                  <span>Differential privacy & telemetry specifications</span>
                 </div>
               </a>
 

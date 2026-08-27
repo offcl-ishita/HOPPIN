@@ -5,6 +5,8 @@ import { RefreshCw, Navigation2, Loader2, WifiOff, LocateFixed, AlertTriangle, A
 import 'leaflet/dist/leaflet.css';
 import './CampusMap.css';
 import ReportCrowdButton from './ReportCrowdButton';
+import ReportBlockageButton from './ReportBlockageButton';
+import { minDistanceToPolyline } from './geoUtils';
 
 // Points at the HOPPIN map-service FastAPI backend. Override at build time
 // with VITE_API_BASE (see .env.example) once it's deployed somewhere real.
@@ -18,34 +20,72 @@ const ACCESSIBLE_DISCLAIMER =
   'Prioritizes paved paths and avoids stairs where road data allows. May not ' +
   'reflect tactile paving, audio signals, or real-time obstructions.';
 
+// How close a route needs to pass to an active blockage to count as
+// "affected" by it. Vertex-distance approximation (see minDistanceToPolyline
+// in geoUtils.js), generous enough to catch a route running right past a
+// blockage without also flagging routes on a genuinely different path.
+const BLOCKAGE_PROXIMITY_METERS = 25;
+
 // ---------------------------------------------------------------------------
 // Route provider. Returns { coordinates: [[lat,lng],...], distanceMeters,
-// durationSeconds } for a start/end pair and an "accessible" flag.
+// durationSeconds, blocked, avoidedCount } for a start/end pair, an
+// "accessible" flag, and the currently-active blockages.
 //
 // Currently: OSRM's public "foot" profile when accessible is requested (a
 // real pedestrian-network route, but NOT wheelchair-aware -- it has no
 // concept of stairs/kerbs/ramps), "driving" otherwise.
+//
+// On blockage avoidance: the public OSRM demo has no "avoid area"/exclude-
+// polygon support and, tested directly, rarely returns more than one
+// route for a short campus-scale trip even with alternatives=true -- there
+// is no real graph-level avoidance available here, only detection. This
+// requests alternatives (free when OSRM does offer them) and picks the
+// first candidate that doesn't pass within BLOCKAGE_PROXIMITY_METERS of any
+// active blockage. If every candidate does (usually because there was
+// only one to begin with), it returns that route anyway with `blocked:
+// true` rather than silently pretending the path is clear -- findRoute()
+// below turns that into a visible warning instead of a fabricated detour.
 //
 // Swap point for a real campus accessibility dataset: replace this
 // function's body with a lookup against your own GeoJSON (ramps, stairs,
 // tactile paving, blocked paths) when accessible is true, keeping the same
 // return shape so findRoute() below doesn't need to change.
 // ---------------------------------------------------------------------------
-async function getRouteGeometry({ startLng, startLat, endLng, endLat, accessible }) {
+async function getRouteGeometry({ startLng, startLat, endLng, endLat, accessible, blockages }) {
   const profile = accessible ? 'foot' : 'driving';
-  const url = `${OSRM_BASE}/${profile}/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`;
+  const url = `${OSRM_BASE}/${profile}/${startLng},${startLat};${endLng},${endLat}?alternatives=true&overview=full&geometries=geojson`;
 
   const res = await fetch(url);
   if (!res.ok) throw new Error(`OSRM request failed: ${res.status}`);
   const data = await res.json();
-  const route = data.routes && data.routes[0];
-  if (!route) throw new Error('No route found');
+  const routes = data.routes || [];
+  if (routes.length === 0) throw new Error('No route found');
 
-  return {
+  const candidates = routes.map((route) => ({
     coordinates: route.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
     distanceMeters: route.distance,
     durationSeconds: route.duration,
-  };
+  }));
+
+  if (!blockages || blockages.length === 0) {
+    return { ...candidates[0], blocked: false, avoidedCount: 0 };
+  }
+
+  const passesBlockage = (candidate) =>
+    blockages.some(
+      (b) => minDistanceToPolyline({ lat: b.lat, lng: b.lng }, candidate.coordinates) < BLOCKAGE_PROXIMITY_METERS
+    );
+
+  const clean = candidates.filter((c) => !passesBlockage(c));
+
+  if (clean.length > 0) {
+    return { ...clean[0], blocked: false, avoidedCount: candidates.length - clean.length };
+  }
+
+  // Every candidate passes near a blockage (commonly because OSRM only
+  // offered one) -- return it, but flagged, rather than fabricating an
+  // "avoided" result that didn't actually happen.
+  return { ...candidates[0], blocked: true, avoidedCount: 0 };
 }
 
 const CAMPUS_CENTER = [12.8231, 80.0444]; // SRM KTR, approximate
@@ -108,6 +148,7 @@ export default function CampusMap() {
   const hasCenteredOnUserRef = useRef(false);
   const heatLayerRef = useRef(null);
   const heatTooltipLayerRef = useRef(null);
+  const blockageLayerRef = useRef(null);
 
   const [features, setFeatures] = useState([]);
   const [status, setStatus] = useState('loading'); // loading | ready | offline
@@ -115,10 +156,12 @@ export default function CampusMap() {
   const [endId, setEndId] = useState('');
   const [accessibleOnly, setAccessibleOnly] = useState(false);
   const [routeNote, setRouteNote] = useState('');
+  const [routeBlocked, setRouteBlocked] = useState(false);
   const [routing, setRouting] = useState(false);
   const [geoError, setGeoError] = useState('');
   const [userPosition, setUserPosition] = useState(null);
   const [panelExpanded, setPanelExpanded] = useState(false);
+  const [blockages, setBlockages] = useState([]);
 
   // ---- map init (once) ----
   useEffect(() => {
@@ -169,6 +212,7 @@ export default function CampusMap() {
 
     heatTooltipLayerRef.current = L.layerGroup().addTo(map);
     markerLayerRef.current = L.layerGroup().addTo(map);
+    blockageLayerRef.current = L.layerGroup().addTo(map);
 
     L.control
       .layers(null, { 'Crowd heatmap': heatLayerRef.current }, { position: 'topright', collapsed: false })
@@ -288,6 +332,51 @@ export default function CampusMap() {
     return () => clearInterval(interval);
   }, [loadLocations]);
 
+  // ---- active blockages: map markers + the list findRoute() checks against ----
+  const loadBlockages = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/blockages`);
+      if (!res.ok) throw new Error(`GET /blockages failed: ${res.status}`);
+      const data = await res.json();
+      setBlockages(data);
+
+      const layer = blockageLayerRef.current;
+      const map = mapRef.current;
+      if (!layer || !map) return;
+      layer.clearLayers();
+
+      data.forEach((b) => {
+        const expiry = b.expires_at
+          ? `expires ${new Date(b.expires_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+          : 'until cleared';
+        const label = b.location_name ? `Near ${b.location_name}` : 'Reported blockage';
+
+        L.marker([b.lat, b.lng], {
+          icon: L.divIcon({
+            className: 'hop-map-blockage-icon',
+            html: '<div class="hop-map-blockage-icon-inner">&#128679;</div>',
+            iconSize: [26, 26],
+            iconAnchor: [13, 13],
+          }),
+        })
+          .bindPopup(
+            `<strong>${label}</strong><br/>` +
+            `<span class="hop-map-popup-cat">${expiry}</span>` +
+            (b.note ? `<br/><span class="hop-map-popup-density">${b.note}</span>` : '')
+          )
+          .addTo(layer);
+      });
+    } catch (err) {
+      console.error('Could not load blockages:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadBlockages();
+    const interval = setInterval(loadBlockages, 45000); // active blockages can appear/expire between location polls
+    return () => clearInterval(interval);
+  }, [loadBlockages]);
+
   // ---- crowd density heatmap ----
   // Small, focused updater: takes ready-made [lat, lng, intensity] triples
   // and pushes them onto the existing heat layer. Kept separate from the
@@ -374,9 +463,14 @@ export default function CampusMap() {
     }
 
     try {
-      const route = await getRouteGeometry({ startLng, startLat, endLng, endLat, accessible: accessibleOnly });
+      const route = await getRouteGeometry({
+        startLng, startLat, endLng, endLat, accessible: accessibleOnly, blockages,
+      });
 
-      const color = accessibleOnly ? '#14B8A6' : '#A855F7';
+      // A route flagged blocked gets a distinct warning color, on top of
+      // the note below -- the line itself should look different, not just
+      // the text next to it.
+      const color = route.blocked ? '#EF4444' : accessibleOnly ? '#14B8A6' : '#A855F7';
       const line = L.polyline(route.coordinates, {
         color,
         weight: 5,
@@ -405,11 +499,23 @@ export default function CampusMap() {
       const distanceKm = (route.distanceMeters / 1000).toFixed(1);
       const durationMin = Math.round(route.durationSeconds / 60);
       const label = accessibleOnly ? 'Accessible route estimate' : 'Driving-network estimate';
-      setRouteNote(`${label}: ${distanceKm} km · ${durationMin} min`);
+      let note = `${label}: ${distanceKm} km · ${durationMin} min`;
+      if (route.blocked) {
+        // The public routing service offered nothing that avoids the
+        // blockage (often because it only offered one route at all) --
+        // show the real route with a clear warning rather than pretending
+        // it dodges something it doesn't.
+        note = `⚠️ Passes through a reported blockage — ${note}`;
+      } else if (route.avoidedCount > 0) {
+        note += ` · avoided ${route.avoidedCount} route${route.avoidedCount > 1 ? 's' : ''} with a reported blockage`;
+      }
+      setRouteNote(note);
+      setRouteBlocked(route.blocked);
       setPanelExpanded(true); // surface the result even if the panel was collapsed
     } catch (err) {
       console.error(err);
       setRouteNote('Could not fetch a route right now — the routing service may be rate-limited. Try again shortly.');
+      setRouteBlocked(false);
     } finally {
       setRouting(false);
     }
@@ -493,7 +599,11 @@ export default function CampusMap() {
                 </button>
               </div>
     
-              {routeNote && <div className="hop-map-route-note mono">{routeNote}</div>}
+              {routeNote && (
+                <div className={`hop-map-route-note mono ${routeBlocked ? 'hop-map-route-note-warning' : ''}`}>
+                  {routeNote}
+                </div>
+              )}
 
               {/* TODO: route results (cards with duration/crowd level/
                   recommendation) render here once "Find route" returns.
@@ -511,20 +621,30 @@ export default function CampusMap() {
         </div>
       )}
 
-      {userPosition && status !== 'offline' && (
-        <button className="hop-map-locate-btn" onClick={centerOnUser} title="Center on me">
-          <LocateFixed size={16} />
-        </button>
-      )}
-
       {status !== 'offline' && (
-        <ReportCrowdButton
-          apiBase={API_BASE}
-          features={features}
-          userPosition={userPosition}
-          disabled={status === 'loading'}
-          onReported={loadLocations}
-        />
+        <div className="hop-map-bottom-right-stack">
+          {userPosition && (
+            <button className="hop-map-locate-btn" onClick={centerOnUser} title="Center on me">
+              <LocateFixed size={16} />
+            </button>
+          )}
+
+          <ReportBlockageButton
+            apiBase={API_BASE}
+            features={features}
+            userPosition={userPosition}
+            disabled={status === 'loading'}
+            onBlockageReported={loadBlockages}
+          />
+
+          <ReportCrowdButton
+            apiBase={API_BASE}
+            features={features}
+            userPosition={userPosition}
+            disabled={status === 'loading'}
+            onReported={loadLocations}
+          />
+        </div>
       )}
     </div>
   );

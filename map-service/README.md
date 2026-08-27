@@ -82,6 +82,8 @@ code difference between the two.
 | POST | `/crowd-readings` | Insert a new density reading — anonymous, no auth. Used both for testing/simulating data and as the live crowdsourced-reporting endpoint (see below) |
 | POST | `/issue-reports` | Report a path/obstruction issue (`path_blocked` or `other_issue`, optional `note`) — anonymous, no auth. Separate table from crowd_readings; doesn't feed crowd-density aggregation |
 | GET | `/issues?hours=24` | Recent issue reports, newest first. No UI consumes this yet — it's queryable/visible while that's built |
+| POST | `/blockages` | Report a path as blocked for routing purposes: `{lat, lng, location_id?, note?, duration_minutes?}` — anonymous, no auth. `duration_minutes` omitted/null = "until cleared" (no auto-expiry) |
+| GET | `/blockages` | Currently-active (non-expired) blockages. `expires_at IS NULL OR expires_at > now()` filtered at query time — no cleanup job needed |
 | GET | `/route?start=lat,lng&end=lat,lng&accessible=bool` | A route between two points as a GeoJSON LineString Feature |
 
 Example — simulate a new reading:
@@ -150,6 +152,15 @@ start and end point (filtered to `is_wheelchair_accessible = true` when
 to a straight line between the two points so the frontend always has
 something to draw. Good enough for a first working version — swap in
 pgRouting once the path network is denser than four seeded segments.
+
+**This endpoint is not currently called by the live site.** The React
+frontend's `CampusMap.jsx` calls the public OSRM demo directly from the
+browser instead (see its `getRouteGeometry()`). Blockage-avoidance
+(checking `GET /blockages` and steering away from active ones) is
+implemented there, client-side, against OSRM's response — not here. If
+`/route` gets wired back in later, that avoidance logic would need to move
+server-side too, most naturally as a `paths` table filter similar to the
+existing `accessible` one.
 
 ## 3. Frontend (Leaflet, single file)
 

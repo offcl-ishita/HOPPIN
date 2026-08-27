@@ -1,20 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { X } from 'lucide-react';
 import CrowdReportSection from './CrowdReportSection';
+import { nearestFeatureId } from './geoUtils';
 import './CampusMap.css';
-
-// Haversine distance in meters -- only used to pick a sensible default
-// location for the report, not for anything precision-sensitive.
-function distanceMeters(lat1, lng1, lat2, lng2) {
-  const R = 6371000;
-  const toRad = (d) => (d * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
 
 // Floating "Report Crowd" button + modal, independent of the collapsible
 // Route panel. Reuses CampusMap's already-tracked `userPosition` (from its
@@ -27,21 +15,10 @@ function distanceMeters(lat1, lng1, lat2, lng2) {
 export default function ReportCrowdButton({ apiBase, features, userPosition, disabled = false, onReported }) {
   const [open, setOpen] = useState(false);
 
-  const nearestLocationId = useMemo(() => {
-    if (!userPosition || features.length === 0) return undefined;
-
-    let nearest = null;
-    let nearestDist = Infinity;
-    for (const f of features) {
-      const [lng, lat] = f.geometry.coordinates;
-      const dist = distanceMeters(userPosition.lat, userPosition.lng, lat, lng);
-      if (dist < nearestDist) {
-        nearestDist = dist;
-        nearest = f.properties.id;
-      }
-    }
-    return nearest !== null ? String(nearest) : undefined;
-  }, [userPosition, features]);
+  const nearestLocationId = useMemo(
+    () => nearestFeatureId(userPosition, features),
+    [userPosition, features]
+  );
 
   const handleSuccess = () => {
     setTimeout(() => setOpen(false), 1500);

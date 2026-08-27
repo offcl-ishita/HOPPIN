@@ -6,7 +6,14 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import crud
 from .database import get_cursor
-from .schemas import CrowdReadingCreate, CrowdReadingOut, IssueReportCreate, IssueReportOut
+from .schemas import (
+    BlockageCreate,
+    BlockageOut,
+    CrowdReadingCreate,
+    CrowdReadingOut,
+    IssueReportCreate,
+    IssueReportOut,
+)
 
 load_dotenv()
 
@@ -101,6 +108,31 @@ def list_issues(hours: int = Query(24, ge=1, le=168, description="Look-back wind
             }
             for row in rows
         ]
+
+
+@app.post("/blockages", response_model=BlockageOut, status_code=201)
+def create_blockage(payload: BlockageCreate):
+    """Report a path as blocked, for routing purposes -- separate from the
+    general path_blocked issue report (see /issue-reports): this one has
+    the fields routing actually needs (a raw point, a duration/expiry) and
+    is what GET /blockages / the route-avoidance check on GET /route reads
+    from."""
+    with get_cursor(commit=True) as cur:
+        if payload.location_id is not None and not crud.get_location(cur, payload.location_id):
+            raise HTTPException(status_code=404, detail="Location not found")
+
+        row = crud.insert_blockage(cur, payload.lat, payload.lng, payload.location_id, payload.note, payload.duration_minutes)
+        return {**row, "lat": float(row["lat"]), "lng": float(row["lng"])}
+
+
+@app.get("/blockages", response_model=list[BlockageOut])
+def list_blockages():
+    """Currently-active (non-expired) blockages. Refetch this before
+    drawing blockage markers or computing a route -- expired ones just
+    stop appearing here on their own, no cleanup job needed."""
+    with get_cursor() as cur:
+        rows = crud.get_active_blockages(cur)
+        return [{**row, "lat": float(row["lat"]), "lng": float(row["lng"])} for row in rows]
 
 
 def _parse_latlng(raw: str, param_name: str) -> tuple[float, float]:

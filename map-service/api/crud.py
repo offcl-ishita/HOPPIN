@@ -148,6 +148,52 @@ def get_recent_issues(cur, hours: int = 24) -> list:
     return cur.fetchall()
 
 
+def insert_blockage(
+    cur, lat: float, lng: float, location_id: Optional[int], note: Optional[str], duration_minutes: Optional[int]
+) -> dict:
+    cur.execute(
+        """
+        INSERT INTO blockages (location_id, geom, note, expires_at)
+        VALUES (
+            %(location_id)s,
+            ST_SetSRID(ST_MakePoint(%(lng)s, %(lat)s), 4326),
+            %(note)s,
+            CASE WHEN %(duration_minutes)s IS NULL THEN NULL
+                 ELSE now() + make_interval(mins => %(duration_minutes)s) END
+        )
+        RETURNING id, location_id, ST_X(geom) AS lng, ST_Y(geom) AS lat, note, "timestamp", expires_at
+        """,
+        {"lat": lat, "lng": lng, "location_id": location_id, "note": note, "duration_minutes": duration_minutes},
+    )
+    return cur.fetchone()
+
+
+def get_active_blockages(cur) -> list:
+    """Blockages that haven't expired yet (expires_at is NULL, meaning
+    "until cleared", or still in the future). No cron/job runner needed --
+    filtering here at query time is enough for a table this small, and
+    means an expired row just silently stops being returned rather than
+    needing anything to go delete it."""
+    cur.execute(
+        """
+        SELECT
+            b.id,
+            b.location_id,
+            l.name AS location_name,
+            ST_X(b.geom) AS lng,
+            ST_Y(b.geom) AS lat,
+            b.note,
+            b."timestamp",
+            b.expires_at
+        FROM blockages b
+        LEFT JOIN locations l ON l.id = b.location_id
+        WHERE b.expires_at IS NULL OR b.expires_at > now()
+        ORDER BY b."timestamp" DESC
+        """
+    )
+    return cur.fetchall()
+
+
 def find_route(cur, start_lat: float, start_lng: float, end_lat: float, end_lng: float, accessible: bool) -> dict:
     """Very simple routing: pick the seeded path whose geometry lies closest
     to both the start and end points (optionally restricted to wheelchair

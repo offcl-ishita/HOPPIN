@@ -213,6 +213,11 @@
   color: var(--hop-text-secondary);
 }
 
+.hop-map-route-note-warning {
+  color: #FCA5A5;
+  font-weight: 600;
+}
+
 /* Crowdsourced density report block, stacked below the route controls */
 .hop-map-report-block {
   display: flex;
@@ -363,15 +368,24 @@
   margin-top: 1px;
 }
 
-/* "Center on me" button, bottom-right of the map canvas. Stacked above the
-   always-present "Report Crowd" FAB (see .hop-report-fab below) rather
-   than sharing its row, since this one only shows up once geolocation
-   resolves and shouldn't shift the FAB's position when it appears. */
-.hop-map-locate-btn {
+/* Bottom-right button stack: "Center on me" (conditional), "Report
+   Blockage", "Report Crowd" (bottom-most / nearest the screen edge, DOM
+   order last). One positioned container instead of hardcoding a bottom
+   offset per button, so adding/removing an item (like the conditional
+   locate button) never requires re-tuning everyone else's offset -- flex
+   gap handles it. Clear of the Route panel, which lives top-left. */
+.hop-map-bottom-right-stack {
   position: absolute;
-  bottom: 62px;
+  bottom: 14px;
   right: 14px;
   z-index: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.hop-map-locate-btn {
   width: 36px;
   height: 36px;
   display: flex;
@@ -389,14 +403,7 @@
   background: rgba(13, 20, 38, 1);
 }
 
-/* Floating "Report Crowd" trigger, bottom-right of the map canvas --
-   below/separate from .hop-map-locate-btn (see above), and clear of the
-   Route panel which lives top-left. */
 .hop-report-fab {
-  position: absolute;
-  bottom: 14px;
-  right: 14px;
-  z-index: 500;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -412,6 +419,7 @@
   cursor: pointer;
   box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.6);
   transition: background 0.15s ease;
+  white-space: nowrap;
 }
 
 .hop-report-fab:hover {
@@ -421,6 +429,35 @@
 .hop-report-fab:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+.hop-blockage-fab {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #FCD34D;
+}
+
+.hop-blockage-fab:hover {
+  background: rgba(245, 158, 11, 0.25);
+}
+
+.hop-blockage-confirm-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+/* 🚧 marker at each active blockage location */
+.hop-map-blockage-icon-inner {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F59E0B;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  font-size: 13px;
+  box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.6);
 }
 
 /* Report Crowd modal */

@@ -51,6 +51,27 @@ CREATE INDEX IF NOT EXISTS issue_reports_location_ts_idx
     ON issue_reports (location_id, "timestamp" DESC);
 
 -- ---------------------------------------------------------------------------
+-- blockages: active routing-affecting blockage reports. Separate from
+-- issue_reports (the general path_blocked/other_issue FYI log) because
+-- routing needs fields that log doesn't have -- a raw point (not every
+-- report is at one of the six named locations) and an expiry -- and
+-- because giving these their own table means the routing-relevant query
+-- (get_active_blockages) never has to filter a general-purpose log for
+-- "the subset that happens to affect routing right now".
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS blockages (
+    id              SERIAL PRIMARY KEY,
+    location_id     INTEGER REFERENCES locations(id) ON DELETE SET NULL,
+    geom            GEOMETRY(POINT, 4326) NOT NULL,
+    note            TEXT,
+    "timestamp"     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    expires_at      TIMESTAMPTZ  -- NULL = "until cleared" (no auto-expiry)
+);
+
+CREATE INDEX IF NOT EXISTS blockages_geom_idx ON blockages USING GIST (geom);
+CREATE INDEX IF NOT EXISTS blockages_expires_idx ON blockages (expires_at);
+
+-- ---------------------------------------------------------------------------
 -- paths: walkable campus segments used for basic routing
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS paths (

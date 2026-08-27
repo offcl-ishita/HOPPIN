@@ -75,7 +75,19 @@
   // SRM KTR campus, approximate center.
   const CAMPUS_CENTER = [12.8231, 80.0444];
 
-  const map = L.map("map").setView(CAMPUS_CENTER, 16);
+  // Generous box around the seeded campus locations, same as CampusMap.jsx
+  // in the main site -- placeholder like CAMPUS_CENTER, tighten once you
+  // have the real campus boundary.
+  const CAMPUS_BOUNDS = [
+    [12.815, 80.035], // southwest
+    [12.833, 80.054], // northeast
+  ];
+
+  const map = L.map("map", {
+    maxBounds: CAMPUS_BOUNDS,
+    maxBoundsViscosity: 1.0,
+    minZoom: 15,
+  }).setView(CAMPUS_CENTER, 16);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "&copy; OpenStreetMap contributors",

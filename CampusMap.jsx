@@ -57,6 +57,15 @@ async function getRouteGeometry({ startLng, startLat, endLng, endLat, accessible
 
 const CAMPUS_CENTER = [12.8231, 80.0444]; // SRM KTR, approximate
 
+// Generous box around the seeded campus locations (roughly 2km x 2km),
+// padded beyond the six named venues to leave room for connecting paths
+// and future locations. Placeholder like CAMPUS_CENTER -- tighten to the
+// real campus boundary once you have it.
+const CAMPUS_BOUNDS = [
+  [12.815, 80.035], // southwest
+  [12.833, 80.054], // northeast
+];
+
 function colorForDensity(density) {
   if (density === null || density === undefined) return '#64748B'; // muted grey = no data
   if (density > 80) return '#EF4444'; // red
@@ -124,7 +133,15 @@ export default function CampusMap() {
   useEffect(() => {
     if (!mapElRef.current || mapElRef.current._leaflet_id) return;
 
-    const map = L.map(mapElRef.current, { zoomControl: true }).setView(CAMPUS_CENTER, 16);
+    // maxBoundsViscosity: 1.0 makes the bounds fully solid -- panning stops
+    // dead at the edge instead of elastically bouncing back, and minZoom
+    // stops zooming out far enough to see much beyond campus either.
+    const map = L.map(mapElRef.current, {
+      zoomControl: true,
+      maxBounds: CAMPUS_BOUNDS,
+      maxBoundsViscosity: 1.0,
+      minZoom: 15,
+    }).setView(CAMPUS_CENTER, 16);
 
     // Plain OSM tiles -- no API key ever required. Darkened to match the
     // site's theme via a CSS filter on .hop-leaflet-el (see CampusMap.css),

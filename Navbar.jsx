@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  ArrowRight, Menu, X, Radio, Navigation, 
-  Sliders, Layers, Coffee, Info, Sparkles 
+import {
+  ArrowRight, Menu, X, Radio, Navigation,
+  Sliders, Coffee, Info, Sparkles
 } from 'lucide-react';
 import logoImg from './hoppin_logo.png';
 import './Navbar.css';
@@ -21,10 +21,10 @@ export default function Navbar() {
   return (
     <header className={`navbar-wrapper ${scrolled ? 'is-scrolled' : ''}`}>
       <div className={`navbar-pill ${mobileOpen ? 'is-mobile-open' : ''}`}>
-        
+
         {/* Top Header Row */}
         <div className="navbar-top-row">
-          
+
           {/* Brand Logo */}
           <a href="#" className="nav-logo" onClick={() => setMobileOpen(false)} aria-label="HOPPIN Home">
             <img src={logoImg} alt="HOPPIN" className="nav-logo-img" />
@@ -53,11 +53,6 @@ export default function Navbar() {
               </a>
             </li>
             <li>
-              <a href="#un-directory" className="nav-link">
-                7 Systems
-              </a>
-            </li>
-            <li>
               <a href="#un-partners" className="nav-link">
                 Campus Perks
               </a>
@@ -76,7 +71,7 @@ export default function Navbar() {
               <ArrowRight size={14} />
             </a>
 
-            <button 
+            <button
               className="nav-mobile-toggle-btn"
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label="Toggle Navigation"
@@ -91,9 +86,9 @@ export default function Navbar() {
         {mobileOpen && (
           <div className="nav-mobile-drawer">
             <div className="nav-mobile-links-list">
-              
-              <a 
-                href="#un-departure-board" 
+
+              <a
+                href="#un-departure-board"
                 className="nav-mob-item"
                 onClick={() => setMobileOpen(false)}
               >
@@ -106,8 +101,8 @@ export default function Navbar() {
                 </div>
               </a>
 
-              <a 
-                href="#un-map-simulator" 
+              <a
+                href="#un-map-simulator"
                 className="nav-mob-item"
                 onClick={() => setMobileOpen(false)}
               >
@@ -120,8 +115,8 @@ export default function Navbar() {
                 </div>
               </a>
 
-              <a 
-                href="#un-calculator" 
+              <a
+                href="#un-calculator"
                 className="nav-mob-item"
                 onClick={() => setMobileOpen(false)}
               >
@@ -134,8 +129,8 @@ export default function Navbar() {
                 </div>
               </a>
 
-              <a 
-                href="#hoppin-events" 
+              <a
+                href="#hoppin-events"
                 className="nav-mob-item"
                 onClick={() => setMobileOpen(false)}
               >
@@ -148,22 +143,8 @@ export default function Navbar() {
                 </div>
               </a>
 
-              <a 
-                href="#un-directory" 
-                className="nav-mob-item"
-                onClick={() => setMobileOpen(false)}
-              >
-                <div className="nav-mob-icon" style={{ color: '#A855F7', background: 'rgba(168, 85, 247, 0.12)' }}>
-                  <Layers size={16} />
-                </div>
-                <div>
-                  <strong>7-Module Architecture</strong>
-                  <span>Differential privacy & telemetry specifications</span>
-                </div>
-              </a>
-
-              <a 
-                href="#un-partners" 
+              <a
+                href="#un-partners"
                 className="nav-mob-item"
                 onClick={() => setMobileOpen(false)}
               >
@@ -176,8 +157,8 @@ export default function Navbar() {
                 </div>
               </a>
 
-              <a 
-                href="#un-faq" 
+              <a
+                href="#un-faq"
                 className="nav-mob-item"
                 onClick={() => setMobileOpen(false)}
               >
@@ -193,8 +174,8 @@ export default function Navbar() {
             </div>
 
             <div className="nav-mob-cta-box">
-              <a 
-                href="#un-waitlist" 
+              <a
+                href="#un-waitlist"
                 className="nav-mob-cta-button"
                 onClick={() => setMobileOpen(false)}
               >

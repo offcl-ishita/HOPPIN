@@ -35,7 +35,6 @@ The compiled, production-optimized assets will be generated in the `dist/` direc
     - **Departure Telemetry Board**: Real-time crowd status, live search filter, capacity meters, and 1-tap pinning.
     - **2D Vector Cartography Simulator**: Interactive SVG map showcasing real-time obstacle avoidance.
     - **Semester ROI Productivity Calculator**: Real-time hours and steps saved estimator.
-    - **7-Module Architecture Console**: Interactive deep-dive into core telemetry layers (`01 SCN` – `07 EVT`).
     - **Campus Priority Waitlist**: Verified `.edu` onboarding with instant shareable referral link generator.
     - **FAQ Accordion**: Interactive questions and answers.
   - **`assets/`**: High-resolution brand logo lockup (`hoppin_logo.png`) and standalone "H" glyph favicon (`hoppin_favicon.png`).

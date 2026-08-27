@@ -33,7 +33,6 @@ export default function Footer() {
               <h4>Navigation Engine</h4>
               <a href="#un-departure-board">Live Status Board</a>
               <a href="#un-map-simulator">Bypass Cartography</a>
-              <a href="#un-directory">7 Architecture Systems</a>
               <a href="#un-calculator">Time Reclaimed Calculator</a>
             </div>
 

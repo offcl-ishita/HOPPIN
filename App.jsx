@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 
 
-import { 
-  Navigation, Compass, Radio, Users, Clock, Flame, 
+import {
+  Navigation, Compass, Radio, Clock, Flame,
   MapPin, Bell, Shield, ArrowRight, ArrowUpRight, CheckCircle2,
-  Sparkles, Layers, Sliders, Coffee, BookOpen, Dumbbell,
+  Layers, Sliders, Coffee, BookOpen, Dumbbell,
   Utensils, ChevronRight, ChevronDown, RotateCcw,
   Zap, Eye, Bookmark, Activity, Info, School, Check,
   Smartphone, Share2, Award, Search, Copy
@@ -27,93 +27,6 @@ const liveDepartureRows = [
   { id: 8, loc: 'Java Green Cafe · West Quad Courtyard', cat: 'food', status: 'CLEAR', occ: 32, eta: 'No line', free: 'Grab & go active', trend: '0 min detour on bypass' },
 ];
 
-const featureSystems = [
-  {
-    code: '01',
-    acronym: 'SCN',
-    title: 'Real-Time Corridor Scanner & Bypass Engine',
-    tag: 'Core Telemetry',
-    desc: 'Continuously monitors walking corridors 300 meters ahead. The split-second localized friction forms, HOPPIN computes instantaneous frictionless bypass paths.',
-    highlight: '< 1.8s instant path recalculation latency',
-    icon: Compass,
-    color: '#10E79D',
-    badge: 'Dynamic Reroute',
-    metrics: ['Sub-2s Path Recalculation', '99.4% Multi-Building Accuracy', '3D Corridor Mesh']
-  },
-  {
-    code: '02',
-    acronym: 'NAV',
-    title: 'Multi-Story Indoor & Skywalk Navigator',
-    tag: '3D Mapping',
-    desc: 'High-precision indoor walking guidance between multi-floor lecture blocks, stairwells, and connecting skywalks without requiring active GPS signals.',
-    highlight: 'Floor-by-floor vertical stair & elevator routing',
-    icon: Navigation,
-    color: '#38BDF8',
-    badge: 'Indoor 3D GIS',
-    metrics: ['Multi-Level Floor Guidance', 'Stairs vs Elevator Speed Calc', 'Offline Mesh Fallback']
-  },
-  {
-    code: '03',
-    acronym: 'SEN',
-    title: 'Differential Ambient Crowd Sensors',
-    tag: 'Zero-PII Privacy',
-    desc: 'Aggregates passive Wi-Fi differential packet density and low-energy BLE gateway signals without storing student identities, MAC addresses, or personal data.',
-    highlight: '100% Privacy-safe differential telemetry',
-    icon: Radio,
-    color: '#A855F7',
-    badge: 'Zero PII Tracked',
-    metrics: ['Differential Privacy Math', 'Zero Personal Storage', 'Low-Energy Sensor Mesh']
-  },
-  {
-    code: '04',
-    acronym: 'CAP',
-    title: 'Live Facility Capacity & Seat Availability',
-    tag: 'Occupancy Live',
-    desc: 'Check desk seats in the library, cardio stations in the gym, and table turnover in dining courts before walking across campus.',
-    highlight: 'Real-time seat & bench availability meters',
-    icon: Users,
-    color: '#F59E0B',
-    badge: 'Seat-Level Clarity',
-    metrics: ['Real-Time Seat Counters', 'Queue Turn Velocity', 'Quiet Zone Heatmaps']
-  },
-  {
-    code: '05',
-    acronym: 'FAV',
-    title: '1-Tap Daily Route & Spot Pinned Presets',
-    tag: 'Student Routine',
-    desc: 'Pin your daily routine spots — your favorite library desk, morning espresso kiosk, and semester timetable classrooms for instant morning glance.',
-    highlight: 'Instant morning routine pulse on your phone',
-    icon: Bookmark,
-    color: '#EC4899',
-    badge: '1-Tap Glance',
-    metrics: ['Timetable Schedule Sync', 'Lock Screen Live Activity', 'Smart Shift Alerts']
-  },
-  {
-    code: '06',
-    acronym: 'ETA',
-    title: 'Predictive Queue Duration Estimator',
-    tag: 'Queue Intelligence',
-    desc: 'Machine learning models predict queue velocity for cafeteria lines, bookstore checkouts, and student document verification counters.',
-    highlight: 'Tells you whether to go now or wait 10 mins',
-    icon: Clock,
-    color: '#06B6D4',
-    badge: 'Predictive ETA',
-    metrics: ['Historical Rush Models', 'Queue Velocity Tracking', 'Optimal Arrival Windows']
-  },
-  {
-    code: '07',
-    acronym: 'EVT',
-    title: 'Live Campus Events & Pop-Up Crowd Radar',
-    tag: 'Campus Feed',
-    desc: 'Correlates sudden hallway congestion with scheduled club seminars, hackathons, and guest symposiums before you hit an unexpected roadblock.',
-    highlight: 'Instant context for unusual crowd spikes',
-    icon: Sparkles,
-    color: '#10E79D',
-    badge: 'Event Intelligence',
-    metrics: ['Symposium Radar Sync', 'Auditorium Rush Detection', 'Automated Campus Detours']
-  }
-];
-
 export default function App() {
   // State: Interactive Departure Board
   const [boardCategory, setBoardCategory] = useState('all');
@@ -121,10 +34,6 @@ export default function App() {
   const [isRushHour, setIsRushHour] = useState(true);
   const [pinnedRows, setPinnedRows] = useState([1, 4]);
   const [boardTime, setBoardTime] = useState('');
-
-  // State: Interactive Architecture Directory
-  const [activeSystemIdx, setActiveSystemIdx] = useState(0);
-  const [expandedMobileIdx, setExpandedMobileIdx] = useState(0);
 
   // State: ROI Calculator
   const [dailyTrips, setDailyTrips] = useState(6);
@@ -209,8 +118,6 @@ export default function App() {
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2400);
   };
-
-  const activeSystem = featureSystems[activeSystemIdx];
 
   return (
     <div className="hop-app-root">
@@ -822,157 +729,6 @@ export default function App() {
       <section id="un-events">
         <HoppinEvents />
       </section>
-      {/* ============================================================
-          SECTION 5: THE 7 CORE ARCHITECTURAL SYSTEMS (THE DIRECTORY)
-          ============================================================ */}
-      <section className="hop-section hop-dir-section" id="un-directory">
-        <div className="hop-container">
-          
-          <div className="hop-section-head">
-            <div className="hop-section-pill">
-              <Layers size={13} className="text-mint" />
-              <span>THE 7-MODULE ARCHITECTURE</span>
-            </div>
-            <h2 className="hop-section-title">
-              Everything HOPPIN does, <span className="hop-text-gradient">engineered like a precision board.</span>
-            </h2>
-            <p className="hop-section-desc">
-              Seven synchronized telemetry layers collaborating in real-time from the moment you leave your hostel room to the second you take your seat.
-            </p>
-          </div>
-
-          {/* Desktop Dual-Pane Architecture Console */}
-          <div className="hop-dir-console hide-on-mobile">
-            
-            {/* Left: 7 Modules List */}
-            <div className="hop-dir-nav">
-              {featureSystems.map((item, idx) => {
-                const IconComponent = item.icon;
-                const isSelected = activeSystemIdx === idx;
-
-                return (
-                  <div
-                    key={item.code}
-                    className={`hop-dir-tab ${isSelected ? 'is-selected' : ''}`}
-                    onClick={() => setActiveSystemIdx(idx)}
-                  >
-                    <div className="hdt-top">
-                      <span className="hdt-code mono">{item.code} · {item.acronym}</span>
-                      <span className="hdt-tag">{item.tag}</span>
-                    </div>
-
-                    <div className="hdt-title-row">
-                      <div className="hdt-icon" style={{ color: item.color }}>
-                        <IconComponent size={17} />
-                      </div>
-                      <h3>{item.title}</h3>
-                    </div>
-
-                    <p className="hdt-desc">{item.desc}</p>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Right: Deep Dive Inspector Card */}
-            <div className="hop-dir-inspector">
-              <div className="hop-inspector-card">
-                
-                <div className="hic-head">
-                  <span className="hic-badge mono">{activeSystem.code} · {activeSystem.badge}</span>
-                  <span className="hic-status mono">MODULE ACTIVE</span>
-                </div>
-
-                <div className="hic-icon-box" style={{ background: `${activeSystem.color}15`, color: activeSystem.color }}>
-                  {(() => {
-                    const SystemIcon = activeSystem.icon;
-                    return <SystemIcon size={36} />;
-                  })()}
-                </div>
-
-                <h3 className="hic-title">{activeSystem.title}</h3>
-                <div className="hic-highlight mono">{activeSystem.highlight}</div>
-                <p className="hic-text">{activeSystem.desc}</p>
-
-                <div className="hic-specs-box">
-                  <span className="hic-specs-title mono">TECHNICAL SPECIFICATIONS</span>
-                  <div className="hic-specs-list">
-                    {activeSystem.metrics.map((m, mIdx) => (
-                      <div key={mIdx} className="hic-spec-pill">
-                        <CheckCircle2 size={13} color={activeSystem.color} />
-                        <span>{m}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="hic-footer">
-                  <a href="#un-waitlist" className="hic-btn">
-                    <span>Test on your campus</span>
-                    <ArrowRight size={14} />
-                  </a>
-                </div>
-
-              </div>
-            </div>
-
-          </div>
-
-          {/* Mobile Accordion View */}
-          <div className="hop-dir-accordion show-on-mobile">
-            {featureSystems.map((item, idx) => {
-              const IconComponent = item.icon;
-              const isExpanded = expandedMobileIdx === idx;
-
-              return (
-                <div 
-                  key={item.code} 
-                  className={`hop-accordion-card ${isExpanded ? 'is-expanded' : ''}`}
-                >
-                  <button 
-                    className="hop-acc-header"
-                    onClick={() => setExpandedMobileIdx(isExpanded ? -1 : idx)}
-                  >
-                    <div className="hacc-left">
-                      <div className="hacc-icon" style={{ color: item.color }}>
-                        <IconComponent size={18} />
-                      </div>
-                      <div className="hacc-title-group">
-                        <div className="hacc-meta mono">
-                          <span>{item.code} · {item.acronym}</span>
-                          <span className="hacc-tag">{item.tag}</span>
-                        </div>
-                        <h4>{item.title}</h4>
-                      </div>
-                    </div>
-                    <div className="hacc-chevron">
-                      {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-                    </div>
-                  </button>
-
-                  {isExpanded && (
-                    <div className="hop-acc-body">
-                      <div className="hacc-highlight mono">{item.highlight}</div>
-                      <p className="hacc-desc">{item.desc}</p>
-                      
-                      <div className="hacc-specs">
-                        {item.metrics.map((m, mIdx) => (
-                          <div key={mIdx} className="hacc-spec-pill">
-                            <CheckCircle2 size={12} color={item.color} />
-                            <span>{m}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-        </div>
-      </section>
-
       {/* ============================================================
           SECTION 6: CAMPUS PARTNERS & ON-ROUTE MONETIZATION
           ============================================================ */}

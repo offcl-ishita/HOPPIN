@@ -1242,7 +1242,7 @@ export function HoppinEvents() {
       desc: '12-hour intensive coding marathon focused on spatial AI algorithms, automated routing and campus telemetry systems.',
       capacity: 64,
       expected: 'MODERATE',
-      isRSVP: true,
+      isRSVP: false,
       live: false,
       specs: [
         'High Speed Wi-Fi Hub',

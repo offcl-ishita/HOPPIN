@@ -613,7 +613,19 @@ export default function App() {
         </div>
       </section>
 
-      
+      {/* ============================================================
+          UPCOMING EVENTS RADAR
+          ============================================================ */}
+      <section id="un-events">
+        <HoppinEvents />
+      </section>
+
+      {/* ============================================================
+          ON-CAMPUS DINING DIRECTORY 
+          ============================================================ */}
+      <section id="un-eateries">
+        <HoppinEateries />
+      </section>
       {/* SECTION 4.5: UPCOMING EVENTS & RSVP*/}
       <section id="un-events">
         <HoppinEvents />
@@ -1730,6 +1742,204 @@ export function HoppinEvents() {
             CROWD DATA SYNC · EVERY 20 SEC
           </span>
 
+        </div>
+
+      </div>
+    </section>
+  );
+}
+
+
+/* ============================================================
+   HOPPIN EATERIES — ON-CAMPUS DINING DIRECTORY
+   ============================================================ */
+
+export function HoppinEateries() {
+  const [eateries] = useState([
+    { id: 'et1', name: "Goldie's Grill and Shawarma", location: "UB Ground Floor", zone: "UB", contact: "9884562815", type: "Grill & Fast Food" },
+    { id: 'et2', name: "Seema's Cafe", location: "UB First Floor", zone: "UB", contact: "9940304021", type: "Cafe & Snacks" },
+    { id: 'et3', name: "Mr. Burger", location: "UB First Floor", zone: "UB", contact: "9566172442", type: "Fast Food" },
+    { id: 'et4', name: "Fritesphere", location: "UB First Floor", zone: "UB", contact: "7200790233", type: "Fries & Quick Bites" },
+    { id: 'et5', name: "Chaat Addaa", location: "UB First Floor", zone: "UB", contact: "9884988331", type: "Street Food & Chaat" },
+    { id: 'et6', name: "SRM Evergreen", location: "UB First Floor", zone: "UB", contact: "N/A", type: "Meals & Snacks" },
+    { id: 'et7', name: "Java (Food Court)", location: "Near Clock Tower", zone: "Java", contact: "8637674853", type: "Main Food Court" },
+    { id: 'et8', name: "Queen's Court", location: "Java Food Court", zone: "Java", contact: "N/A", type: "Multi-Cuisine" },
+    { id: 'et9', name: "Subway", location: "Java Food Court", zone: "Java", contact: "N/A", type: "Submarines & Salads" },
+    { id: 'et10', name: "Loaded Fries", location: "Java Food Court", zone: "Java", contact: "N/A", type: "Snacks" },
+    { id: 'et11', name: "Shakes and Desserts", location: "Java Food Court", zone: "Java", contact: "N/A", type: "Beverages & Desserts" },
+    { id: 'et12', name: "Classic Biryani", location: "Java Food Court", zone: "Java", contact: "N/A", type: "Biryani & Rice" },
+    { id: 'et13', name: "Genz Beta Cafe", location: "Near Hotel Management Block", zone: "Other", contact: "7397777942", type: "Modern Cafe" },
+    { id: 'et14', name: "Domino's Pizza", location: "Vendhar Square", zone: "Vendhar", contact: "18002081234", type: "Pizza & Italian" },
+    { id: 'et15', name: "Zinger", location: "Vendhar Square", zone: "Vendhar", contact: "N/A", type: "Fast Food" },
+    { id: 'et16', name: "Triangle Social Cafe", location: "Vendhar Square", zone: "Vendhar", contact: "N/A", type: "Social Cafe" },
+    { id: 'et17', name: "Slice Of Life", location: "Beside SRM Medical College", zone: "Medical", contact: "9786535984", type: "Cafe & Beverages" },
+  ]);
+
+  const [activeZone, setActiveZone] = useState('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredEateries = eateries.filter((item) => {
+    const matchesZone = activeZone === 'ALL' || item.zone.toUpperCase() === activeZone;
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          item.location.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesZone && matchesSearch;
+  });
+
+  return (
+    <section
+      className="hop-section hop-eateries-section"
+      id="un-eateries"
+      style={{
+        background: 'radial-gradient(circle at 15% 90%, rgba(56,189,248,0.06), transparent 30%), #02090d',
+        padding: '90px 0'
+      }}
+    >
+      <div className="hop-container">
+        
+        {/* Section Header */}
+        <div className="hop-section-head">
+          <div className="hop-section-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10E79D', boxShadow: '0 0 12px #10E79D', animation: 'pulse 1.5s infinite' }} />
+            <span>ON-ROUTE CAMPUS DINING DIRECTORY</span>
+          </div>
+          <h2 className="hop-section-title">
+            Fuel your day with zero detour, <span className="hop-text-gradient">on-campus spots.</span>
+          </h2>
+          <p className="hop-section-desc">
+            Explore verified food outlets, cafes, and food courts across SRM KTR — tracked live by HOPPIN to help you find quick bites on your route.
+          </p>
+        </div>
+
+        {/* Command Bar / Filter Tabs */}
+        <div style={{
+          background: 'rgba(8,17,23,0.9)',
+          border: '1px solid rgba(148,163,184,0.12)',
+          borderRadius: '18px',
+          padding: '14px',
+          marginBottom: '28px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '12px',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          backdropFilter: 'blur(12px)'
+        }}>
+          
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {[
+              ['ALL', 'All Spots'],
+              ['UB', 'University Building (UB)'],
+              ['JAVA', 'Java Food Court'],
+              ['VENDHAR', 'Vendhar Square'],
+              ['MEDICAL', 'Medical Block']
+            ].map(([val, label]) => (
+              <button
+                key={val}
+                onClick={() => setActiveZone(val)}
+                style={{
+                  border: activeZone === val ? '1px solid #10E79D' : '1px solid rgba(148,163,184,0.15)',
+                  background: activeZone === val ? 'rgba(16,231,157,0.12)' : 'rgba(2,11,14,0.7)',
+                  color: activeZone === val ? '#10E79D' : '#94A3B8',
+                  padding: '9px 14px',
+                  borderRadius: '999px',
+                  fontSize: '11px',
+                  fontFamily: 'monospace',
+                  textTransform: 'uppercase',
+                  cursor: 'pointer',
+                  transition: 'all 0.25s ease'
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ position: 'relative', minWidth: '220px', flex: '0 1 280px' }}>
+            <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748B' }} />
+            <input
+              type="text"
+              placeholder="Search eatery or location..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: '100%',
+                boxSizing: 'border-box',
+                background: '#020B0E',
+                border: '1px solid rgba(148,163,184,0.15)',
+                borderRadius: '10px',
+                padding: '10px 12px 10px 36px',
+                color: '#E2E8F0',
+                outline: 'none',
+                fontFamily: 'monospace',
+                fontSize: '11px'
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Eateries Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '18px' }}>
+          {filteredEateries.map((item) => (
+            <div
+              key={item.id}
+              style={{
+                background: 'linear-gradient(145deg, rgba(8,17,23,0.98), rgba(2,11,14,0.98))',
+                border: '1px solid rgba(148,163,184,0.12)',
+                borderRadius: '20px',
+                padding: '22px',
+                position: 'relative',
+                transition: 'all 0.25s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.style.borderColor = 'rgba(16,231,157,0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.borderColor = 'rgba(148,163,184,0.12)';
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <span style={{
+                  color: '#38BDF8',
+                  background: 'rgba(56,189,248,0.08)',
+                  border: '1px solid rgba(56,189,248,0.2)',
+                  padding: '4px 8px',
+                  borderRadius: '999px',
+                  fontSize: '9px',
+                  fontFamily: 'monospace',
+                  fontWeight: 700
+                }}>
+                  {item.type}
+                </span>
+                <span style={{ color: '#10E79D', fontSize: '9px', fontFamily: 'monospace' }}>● ON-CAMPUS</span>
+              </div>
+
+              <h3 style={{ color: '#F8FAFC', fontSize: '18px', margin: '0 0 8px', lineHeight: 1.25 }}>
+                {item.name}
+              </h3>
+
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', color: '#94A3B8', fontSize: '11px', marginBottom: '12px' }}>
+                <MapPin size={13} className="text-mint" />
+                <span>{item.location}</span>
+              </div>
+
+              <div style={{
+                background: '#020B0E',
+                border: '1px solid rgba(148,163,184,0.1)',
+                borderRadius: '10px',
+                padding: '10px 12px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                fontFamily: 'monospace',
+                fontSize: '10px'
+              }}>
+                <span style={{ color: '#64748B' }}>DIRECT CONTACT</span>
+                <span style={{ color: '#CBD5E1' }}>{item.contact}</span>
+              </div>
+            </div>
+          ))}
         </div>
 
       </div>

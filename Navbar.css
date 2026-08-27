@@ -110,14 +110,7 @@
     height: 32px;
   }
 }
-.nav-links {
-  display: none;
-  list-style: none;
-  align-items: center;
-  gap: 4px; /* Tightened slightly from 2px/8px to comfortably fit all tabs including Events */
-  margin: 0 auto;
-  padding: 0 1rem;
-}
+
 .nav-logo-domain {
   font-size: 12px;
   font-weight: 700;

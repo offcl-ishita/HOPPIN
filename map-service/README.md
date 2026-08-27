@@ -77,9 +77,9 @@ code difference between the two.
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | `/health` | Liveness check |
-| GET | `/locations` | All locations as a GeoJSON FeatureCollection, each feature carrying its latest crowd reading |
-| GET | `/locations/{id}/crowd` | Latest crowd reading for one location |
-| POST | `/crowd-readings` | Insert a new density reading (for testing/simulating live data) |
+| GET | `/locations` | All locations as a GeoJSON FeatureCollection, each feature carrying its averaged crowd reading |
+| GET | `/locations/{id}/crowd` | Latest single crowd reading for one location |
+| POST | `/crowd-readings` | Insert a new density reading — anonymous, no auth. Used both for testing/simulating data and as the live crowdsourced-reporting endpoint (see below) |
 | GET | `/route?start=lat,lng&end=lat,lng&accessible=bool` | A route between two points as a GeoJSON LineString Feature |
 
 Example — simulate a new reading:
@@ -93,6 +93,26 @@ curl -X POST http://127.0.0.1:8000/crowd-readings \
 `status_label` is optional on that request — if omitted, it's derived from
 `density_percent` (`> 80%` → "High Queue", `50-80%` → "Moderate", `< 50%` →
 "Quiet Zone").
+
+### How crowd density aggregates (crowdsourced reporting)
+
+`GET /locations` doesn't just return the single latest reading — it averages
+`density_percent` across every reading in the last `CROWD_WINDOW_MINUTES`
+(15, see `api/crud.py`) for that location. Two things fall out of that:
+
+- **Old readings decay out.** A location with no reports in the last 15
+  minutes shows `density_percent: null` again, rather than a stale number
+  hanging around forever.
+- **Independent reports blend together.** This is what makes `POST
+  /crowd-readings` work as anonymous crowdsourced reporting — several
+  students tapping Low/Moderate/High for the same venue average out instead
+  of the newest tap overwriting everyone else's. There's no `reported_by`
+  field; reports are anonymous by design (no auth on the endpoint, nothing
+  identifying is requested or stored).
+
+`status_label` on `/locations` is re-derived from the averaged number (a
+text label can't itself be averaged); `/locations/{id}/crowd` is unchanged
+and still returns the single most recent raw reading.
 
 ### How `/route` works
 

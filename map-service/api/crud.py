@@ -10,9 +10,18 @@ def status_label_for(density_percent: float) -> str:
     return "Quiet Zone"
 
 
+CROWD_WINDOW_MINUTES = 15
+
+
 def get_locations_geojson(cur) -> dict:
-    """All locations as a GeoJSON FeatureCollection, each feature carrying its
-    latest crowd reading (if any) in properties."""
+    """All locations as a GeoJSON FeatureCollection. Each feature's crowd
+    reading is the average density_percent across all readings in the last
+    CROWD_WINDOW_MINUTES, not just the single latest one -- this is what lets
+    old readings decay out over time and multiple independent reports for
+    the same venue (e.g. crowdsourced taps from several students) blend into
+    one number instead of the newest one clobbering the rest. status_label is
+    re-derived from the averaged number rather than carried over from a
+    single row, since a text label can't be averaged."""
     cur.execute(
         """
         SELECT
@@ -22,22 +31,23 @@ def get_locations_geojson(cur) -> dict:
             l.capacity,
             ST_AsGeoJSON(l.geom)::json AS geometry,
             cr.density_percent,
-            cr.status_label,
             cr."timestamp" AS crowd_updated_at
         FROM locations l
         LEFT JOIN LATERAL (
-            SELECT density_percent, status_label, "timestamp"
+            SELECT AVG(density_percent) AS density_percent, MAX("timestamp") AS "timestamp"
             FROM crowd_readings
             WHERE location_id = l.id
-            ORDER BY "timestamp" DESC
-            LIMIT 1
+              AND "timestamp" > now() - make_interval(mins => %(window_minutes)s)
         ) cr ON TRUE
         ORDER BY l.id
-        """
+        """,
+        {"window_minutes": CROWD_WINDOW_MINUTES},
     )
     rows = cur.fetchall()
-    features = [
-        {
+    features = []
+    for row in rows:
+        density = float(row["density_percent"]) if row["density_percent"] is not None else None
+        features.append({
             "type": "Feature",
             "geometry": row["geometry"],
             "properties": {
@@ -45,13 +55,11 @@ def get_locations_geojson(cur) -> dict:
                 "name": row["name"],
                 "category": row["category"],
                 "capacity": row["capacity"],
-                "density_percent": float(row["density_percent"]) if row["density_percent"] is not None else None,
-                "status_label": row["status_label"],
+                "density_percent": round(density, 1) if density is not None else None,
+                "status_label": status_label_for(density) if density is not None else None,
                 "crowd_updated_at": row["crowd_updated_at"].isoformat() if row["crowd_updated_at"] else None,
             },
-        }
-        for row in rows
-    ]
+        })
     return {"type": "FeatureCollection", "features": features}
 
 

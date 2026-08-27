@@ -93,8 +93,7 @@ export default function Navbar() {
 
         </div>
 
-        {/* Mobile Dropdown Drawer (Inside the Pill Container) */}
-        {mobileOpen && (
+{mobileOpen && (
           <div className="nav-mobile-drawer">
             <div className="nav-mobile-links-list">
               
@@ -139,19 +138,18 @@ export default function Navbar() {
                   <span>Interactive semester hours saved estimator</span>
                 </div>
               </a>
-              
 
               <a 
-                href="#un-directory" 
+                href="#hoppin-events" 
                 className="nav-mob-item"
                 onClick={() => setMobileOpen(false)}
               >
-                <div className="nav-mob-icon" style={{ color: '#A855F7', background: 'rgba(168, 85, 247, 0.12)' }}>
-                  <Layers size={16} />
+                <div className="nav-mob-icon" style={{ color: '#10E79D', background: 'rgba(16, 231, 157, 0.12)' }}>
+                  <Sparkles size={16} />
                 </div>
                 <div>
-                  <strong>7-Module Architecture</strong>
-                  <span>Differential privacy & telemetry specifications</span>
+                  <strong>Campus Event Radar</strong>
+                  <span>Fests, hackathons, seminars & RSVPs</span>
                 </div>
               </a>
 
@@ -211,8 +209,3 @@ export default function Navbar() {
             </div>
           </div>
         )}
-
-      </div>
-    </header>
-  );
-}

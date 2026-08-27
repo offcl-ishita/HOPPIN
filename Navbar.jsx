@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ArrowRight, Menu, X, Radio, Navigation, 
-  Sliders, Layers, Coffee, Info, Bookmark, Sparkles 
+  Sliders, Layers, Coffee, Info, Sparkles 
 } from 'lucide-react';
 import logoImg from './hoppin_logo.png';
 import './Navbar.css';
@@ -30,24 +30,13 @@ export default function Navbar() {
             <img src={logoImg} alt="HOPPIN" className="nav-logo-img" />
           </a>
 
-         
-
+          {/* Desktop Nav Links */}
+          <ul className="nav-links">
             <li>
-              <a href="#un-directory" className="nav-link">
-                7 Systems
+              <a href="#un-departure-board" className="nav-link">
+                Live Board
               </a>
             </li>
-            <li>
-              <a href="#un-partners" className="nav-link">
-                Campus Perks
-              </a>
-            </li>
-            <li>
-              <a href="#un-faq" className="nav-link">
-                FAQ
-              </a>
-            </li>
-          </ul>
             <li>
               <a href="#un-map-simulator" className="nav-link">
                 Bypass Map
@@ -56,6 +45,11 @@ export default function Navbar() {
             <li>
               <a href="#un-calculator" className="nav-link">
                 Time Reclaimed
+              </a>
+            </li>
+            <li>
+              <a href="#hoppin-events" className="nav-link">
+                Events
               </a>
             </li>
             <li>
@@ -93,7 +87,8 @@ export default function Navbar() {
 
         </div>
 
-{mobileOpen && (
+        {/* Mobile Dropdown Drawer */}
+        {mobileOpen && (
           <div className="nav-mobile-drawer">
             <div className="nav-mobile-links-list">
               
@@ -209,3 +204,8 @@ export default function Navbar() {
             </div>
           </div>
         )}
+
+      </div>
+    </header>
+  );
+}

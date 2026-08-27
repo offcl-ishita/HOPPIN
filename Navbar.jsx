@@ -30,18 +30,7 @@ export default function Navbar() {
             <img src={logoImg} alt="HOPPIN" className="nav-logo-img" />
           </a>
 
-          {/* Desktop Nav Links */}
-          <ul className="nav-links">
-            <li>
-              <a href="#un-departure-board" className="nav-link">
-                Live Board
-              </a>
-            </li>
-            <li>
-              <a href="#hoppin-events" className="nav-link">
-                Events
-              </a>
-            </li>
+         
 
             <li>
               <a href="#un-directory" className="nav-link">

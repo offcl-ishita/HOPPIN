@@ -80,6 +80,8 @@ code difference between the two.
 | GET | `/locations` | All locations as a GeoJSON FeatureCollection, each feature carrying its averaged crowd reading |
 | GET | `/locations/{id}/crowd` | Latest single crowd reading for one location |
 | POST | `/crowd-readings` | Insert a new density reading — anonymous, no auth. Used both for testing/simulating data and as the live crowdsourced-reporting endpoint (see below) |
+| POST | `/issue-reports` | Report a path/obstruction issue (`path_blocked` or `other_issue`, optional `note`) — anonymous, no auth. Separate table from crowd_readings; doesn't feed crowd-density aggregation |
+| GET | `/issues?hours=24` | Recent issue reports, newest first. No UI consumes this yet — it's queryable/visible while that's built |
 | GET | `/route?start=lat,lng&end=lat,lng&accessible=bool` | A route between two points as a GeoJSON LineString Feature |
 
 Example — simulate a new reading:
@@ -94,23 +96,47 @@ curl -X POST http://127.0.0.1:8000/crowd-readings \
 `density_percent` (`> 80%` → "High Queue", `50-80%` → "Moderate", `< 50%` →
 "Quiet Zone").
 
+Example — report a blocked path:
+
+```bash
+curl -X POST http://127.0.0.1:8000/issue-reports \
+  -H "Content-Type: application/json" \
+  -d '{"location_id": 1, "issue_type": "path_blocked"}'
+
+curl -X POST http://127.0.0.1:8000/issue-reports \
+  -H "Content-Type: application/json" \
+  -d '{"location_id": 1, "issue_type": "other_issue", "note": "Broken gate near the library entrance"}'
+```
+
+`issue_type` must be `path_blocked` or `other_issue`; `note` is optional
+and only really meaningful for `other_issue` (max 500 chars).
+
 ### How crowd density aggregates (crowdsourced reporting)
 
-`GET /locations` doesn't just return the single latest reading — it averages
-`density_percent` across every reading in the last `CROWD_WINDOW_MINUTES`
-(15, see `api/crud.py`) for that location. Two things fall out of that:
+`GET /locations` doesn't just return the single latest reading — it computes
+a **time-decay-weighted average** of `density_percent` across readings from
+the last `CROWD_DECAY_MINUTES` (10, see `api/crud.py`) for that location. A
+reading from right now counts close to full weight; one from
+`CROWD_DECAY_MINUTES` ago counts ~0; it's linear in between
+(`weight = 1 - age / CROWD_DECAY_MINUTES`). A few things fall out of that:
 
-- **Old readings decay out.** A location with no reports in the last 15
-  minutes shows `density_percent: null` again, rather than a stale number
-  hanging around forever.
-- **Independent reports blend together.** This is what makes `POST
-  /crowd-readings` work as anonymous crowdsourced reporting — several
-  students tapping Low/Moderate/High for the same venue average out instead
-  of the newest tap overwriting everyone else's. There's no `reported_by`
-  field; reports are anonymous by design (no auth on the endpoint, nothing
-  identifying is requested or stored).
+- **Old readings actually fade, not cliff-edge disappear.** A reading from
+  8 minutes ago barely moves the number; one from 2 minutes ago moves it a
+  lot. Once nothing's left within the window, `density_percent` goes back to
+  `null` rather than a stale number hanging around.
+- **Independent reports blend together, recent ones dominating.** This is
+  what makes `POST /crowd-readings` work as anonymous crowdsourced
+  reporting — several students tapping a level for the same venue average
+  out (weighted toward whoever tapped most recently) instead of either the
+  newest tap alone or a flat average of everything in the window. There's no
+  `reported_by` field; reports are anonymous by design (no auth on the
+  endpoint, nothing identifying is requested or stored).
+- **Issue reports (`path_blocked` / `other_issue`) are not part of this at
+  all.** They live in a separate `issue_reports` table (see `/issues`
+  above) specifically so they can't skew density numbers they were never
+  meant to represent.
 
-`status_label` on `/locations` is re-derived from the averaged number (a
+`status_label` on `/locations` is re-derived from the weighted number (a
 text label can't itself be averaged); `/locations/{id}/crowd` is unchanged
 and still returns the single most recent raw reading.
 

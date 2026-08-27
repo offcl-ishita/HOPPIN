@@ -4,6 +4,7 @@ import 'leaflet.heat';
 import { RefreshCw, Navigation2, Loader2, WifiOff, LocateFixed, AlertTriangle, Accessibility, Info, ChevronDown } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import './CampusMap.css';
+import ReportCrowdButton from './ReportCrowdButton';
 
 // Points at the HOPPIN map-service FastAPI backend. Override at build time
 // with VITE_API_BASE (see .env.example) once it's deployed somewhere real.
@@ -514,6 +515,16 @@ export default function CampusMap() {
         <button className="hop-map-locate-btn" onClick={centerOnUser} title="Center on me">
           <LocateFixed size={16} />
         </button>
+      )}
+
+      {status !== 'offline' && (
+        <ReportCrowdButton
+          apiBase={API_BASE}
+          features={features}
+          userPosition={userPosition}
+          disabled={status === 'loading'}
+          onReported={loadLocations}
+        />
       )}
     </div>
   );

@@ -32,6 +32,25 @@ CREATE INDEX IF NOT EXISTS crowd_readings_location_ts_idx
     ON crowd_readings (location_id, "timestamp" DESC);
 
 -- ---------------------------------------------------------------------------
+-- issue_reports: crowdsourced path/obstruction reports, deliberately a
+-- separate table from crowd_readings rather than a "type" column on it --
+-- these aren't density samples (no density_percent), they shouldn't feed
+-- the crowd-density aggregation, and keeping them apart means that
+-- aggregation query never has to filter a type column to avoid averaging
+-- in rows that were never meant to be averaged.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS issue_reports (
+    id              SERIAL PRIMARY KEY,
+    location_id     INTEGER NOT NULL REFERENCES locations(id) ON DELETE CASCADE,
+    issue_type      TEXT NOT NULL CHECK (issue_type IN ('path_blocked', 'other_issue')),
+    note            TEXT,
+    "timestamp"     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS issue_reports_location_ts_idx
+    ON issue_reports (location_id, "timestamp" DESC);
+
+-- ---------------------------------------------------------------------------
 -- paths: walkable campus segments used for basic routing
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS paths (

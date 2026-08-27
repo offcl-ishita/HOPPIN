@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import crud
 from .database import get_cursor
-from .schemas import CrowdReadingCreate, CrowdReadingOut
+from .schemas import CrowdReadingCreate, CrowdReadingOut, IssueReportCreate, IssueReportOut
 
 load_dotenv()
 
@@ -68,6 +68,39 @@ def create_crowd_reading(payload: CrowdReadingCreate):
         return crud.insert_crowd_reading(
             cur, payload.location_id, payload.density_percent, payload.status_label
         )
+
+
+@app.post("/issue-reports", response_model=IssueReportOut, status_code=201)
+def create_issue_report(payload: IssueReportCreate):
+    """Insert a path/obstruction report (path_blocked or other_issue).
+    Deliberately a separate endpoint from /crowd-readings, writing to a
+    separate table -- these aren't density samples and don't feed the
+    crowd-density aggregation on GET /locations."""
+    with get_cursor(commit=True) as cur:
+        location = crud.get_location(cur, payload.location_id)
+        if not location:
+            raise HTTPException(status_code=404, detail="Location not found")
+
+        return crud.insert_issue_report(cur, payload.location_id, payload.issue_type, payload.note)
+
+
+@app.get("/issues")
+def list_issues(hours: int = Query(24, ge=1, le=168, description="Look-back window in hours")):
+    """Recent path/obstruction reports, newest first. No UI consumes this
+    yet -- it exists so reports are queryable/visible while that's built."""
+    with get_cursor() as cur:
+        rows = crud.get_recent_issues(cur, hours)
+        return [
+            {
+                "id": row["id"],
+                "location_id": row["location_id"],
+                "location_name": row["location_name"],
+                "issue_type": row["issue_type"],
+                "note": row["note"],
+                "timestamp": row["timestamp"].isoformat(),
+            }
+            for row in rows
+        ]
 
 
 def _parse_latlng(raw: str, param_name: str) -> tuple[float, float]:

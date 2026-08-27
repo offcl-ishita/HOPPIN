@@ -10,18 +10,22 @@ def status_label_for(density_percent: float) -> str:
     return "Quiet Zone"
 
 
-CROWD_WINDOW_MINUTES = 15
+CROWD_DECAY_MINUTES = 10
 
 
 def get_locations_geojson(cur) -> dict:
     """All locations as a GeoJSON FeatureCollection. Each feature's crowd
-    reading is the average density_percent across all readings in the last
-    CROWD_WINDOW_MINUTES, not just the single latest one -- this is what lets
-    old readings decay out over time and multiple independent reports for
-    the same venue (e.g. crowdsourced taps from several students) blend into
-    one number instead of the newest one clobbering the rest. status_label is
-    re-derived from the averaged number rather than carried over from a
-    single row, since a text label can't be averaged."""
+    reading is a time-decay-weighted average of density_percent across all
+    readings in the last CROWD_DECAY_MINUTES: a reading from just now counts
+    close to full weight, one from CROWD_DECAY_MINUTES ago counts ~0, and
+    it's linear in between (weight = 1 - age/CROWD_DECAY_MINUTES). This is
+    what lets stale readings actually fade out instead of counting exactly
+    as much as a fresh one right up until they age out of the window, and
+    lets multiple independent reports for the same venue (e.g. crowdsourced
+    taps from several students) blend together rather than the newest one
+    clobbering the rest. status_label is re-derived from the weighted
+    number rather than carried over from a single row, since a text label
+    can't be averaged."""
     cur.execute(
         """
         SELECT
@@ -34,14 +38,25 @@ def get_locations_geojson(cur) -> dict:
             cr."timestamp" AS crowd_updated_at
         FROM locations l
         LEFT JOIN LATERAL (
-            SELECT AVG(density_percent) AS density_percent, MAX("timestamp") AS "timestamp"
-            FROM crowd_readings
-            WHERE location_id = l.id
-              AND "timestamp" > now() - make_interval(mins => %(window_minutes)s)
+            SELECT
+                SUM(density_percent * weight) / NULLIF(SUM(weight), 0) AS density_percent,
+                MAX("timestamp") AS "timestamp"
+            FROM (
+                SELECT
+                    density_percent,
+                    "timestamp",
+                    GREATEST(
+                        0,
+                        1 - EXTRACT(EPOCH FROM (now() - "timestamp")) / (%(decay_minutes)s * 60.0)
+                    ) AS weight
+                FROM crowd_readings
+                WHERE location_id = l.id
+                  AND "timestamp" > now() - make_interval(mins => %(decay_minutes)s)
+            ) recent
         ) cr ON TRUE
         ORDER BY l.id
         """,
-        {"window_minutes": CROWD_WINDOW_MINUTES},
+        {"decay_minutes": CROWD_DECAY_MINUTES},
     )
     rows = cur.fetchall()
     features = []
@@ -93,6 +108,44 @@ def insert_crowd_reading(cur, location_id: int, density_percent: float, status_l
         (location_id, density_percent, label),
     )
     return cur.fetchone()
+
+
+def insert_issue_report(cur, location_id: int, issue_type: str, note: Optional[str]) -> dict:
+    cur.execute(
+        """
+        INSERT INTO issue_reports (location_id, issue_type, note)
+        VALUES (%s, %s, %s)
+        RETURNING id, location_id, issue_type, note, "timestamp"
+        """,
+        (location_id, issue_type, note),
+    )
+    return cur.fetchone()
+
+
+def get_recent_issues(cur, hours: int = 24) -> list:
+    """Issue reports (path_blocked / other_issue) from the last `hours`
+    hours, newest first. Deliberately not folded into get_locations_geojson
+    or the crowd-density aggregation -- these aren't density samples, and
+    there's no UI consuming this yet (per the request that added it), so
+    it's kept as a plain queryable list rather than shaped for any specific
+    caller."""
+    cur.execute(
+        """
+        SELECT
+            ir.id,
+            ir.location_id,
+            l.name AS location_name,
+            ir.issue_type,
+            ir.note,
+            ir."timestamp"
+        FROM issue_reports ir
+        JOIN locations l ON l.id = ir.location_id
+        WHERE ir."timestamp" > now() - make_interval(hours => %(hours)s)
+        ORDER BY ir."timestamp" DESC
+        """,
+        {"hours": hours},
+    )
+    return cur.fetchall()
 
 
 def find_route(cur, start_lat: float, start_lng: float, end_lat: float, end_lng: float, accessible: bool) -> dict:

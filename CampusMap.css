@@ -112,6 +112,54 @@
   box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.6);
 }
 
+.hop-map-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: #F8FAFC;
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.hop-map-panel-chevron {
+  color: var(--hop-text-muted);
+  transition: transform 0.2s ease;
+}
+
+.hop-map-panel-chevron.is-expanded {
+  transform: rotate(180deg);
+}
+
+/* Grid-based expand/collapse: animating 0fr -> 1fr gives a smooth height
+   transition without measuring scrollHeight in JS, and it adapts fine to
+   the body's variable height (route note / report feedback appearing). */
+.hop-map-panel-body-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease, opacity 0.2s ease;
+  opacity: 0;
+}
+
+.hop-map-panel-body-wrap.is-expanded {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.hop-map-panel-body {
+  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .hop-map-controls-row {
   display: flex;
   align-items: center;

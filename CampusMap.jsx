@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet.heat';
-import { RefreshCw, Navigation2, Loader2, WifiOff, LocateFixed, AlertTriangle, Accessibility, Info } from 'lucide-react';
+import { RefreshCw, Navigation2, Loader2, WifiOff, LocateFixed, AlertTriangle, Accessibility, Info, ChevronDown } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import './CampusMap.css';
 
@@ -128,6 +128,7 @@ export default function CampusMap() {
   const [reportLocationId, setReportLocationId] = useState('');
   const [reporting, setReporting] = useState(false);
   const [reportFeedback, setReportFeedback] = useState('');
+  const [panelExpanded, setPanelExpanded] = useState(false);
 
   // ---- map init (once) ----
   useEffect(() => {
@@ -479,80 +480,97 @@ export default function CampusMap() {
 
       {status !== 'offline' && (
         <div className="hop-map-controls">
-          <div className="hop-map-controls-row">
-            <select
-              className="hop-map-select"
-              value={startId}
-              onChange={(e) => setStartId(e.target.value)}
-              disabled={status === 'loading'}
-            >
-              {features.map((f) => (
-                <option key={f.properties.id} value={f.properties.id}>
-                  {f.properties.name}
-                </option>
-              ))}
-            </select>
-            <Navigation2 size={13} className="hop-map-controls-arrow" />
-            <select
-              className="hop-map-select"
-              value={endId}
-              onChange={(e) => setEndId(e.target.value)}
-              disabled={status === 'loading'}
-            >
-              {features.map((f) => (
-                <option key={f.properties.id} value={f.properties.id}>
-                  {f.properties.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <button
+            type="button"
+            className="hop-map-panel-header"
+            onClick={() => setPanelExpanded((v) => !v)}
+            aria-expanded={panelExpanded}
+          >
+            <span>Route</span>
+            <ChevronDown
+              size={16}
+              className={`hop-map-panel-chevron ${panelExpanded ? 'is-expanded' : ''}`}
+            />
+          </button>
 
-          <div className="hop-map-controls-row">
-            <label className="hop-map-checkbox">
-              <input
-                type="checkbox"
-                checked={accessibleOnly}
-                onChange={(e) => setAccessibleOnly(e.target.checked)}
-              />
-              <Accessibility size={13} />
-              <span>Accessible only</span>
-              <Info size={12} className="hop-map-info-icon" title={ACCESSIBLE_DISCLAIMER} />
-            </label>
-            <button className="hop-map-btn hop-map-btn-primary" onClick={findRoute} disabled={routing || status === 'loading'}>
-              {routing ? <Loader2 size={13} className="hop-spin" /> : <Navigation2 size={13} />}
-              <span>Find route</span>
-            </button>
-          </div>
-
-          {routeNote && <div className="hop-map-route-note mono">{routeNote}</div>}
-
-          <div className="hop-map-report-block">
-            <div className="hop-map-report-label">Report crowd level here</div>
-            <select
-              className="hop-map-select"
-              value={reportLocationId}
-              onChange={(e) => setReportLocationId(e.target.value)}
-              disabled={status === 'loading'}
-            >
-              {features.map((f) => (
-                <option key={f.properties.id} value={f.properties.id}>
-                  {f.properties.name}
-                </option>
-              ))}
-            </select>
-            <div className="hop-map-report-buttons">
-              {REPORT_LEVELS.map((level) => (
-                <button
-                  key={level.label}
-                  className={`hop-map-report-btn hop-map-report-btn-${level.label.toLowerCase()}`}
-                  onClick={() => submitReport(level.value)}
-                  disabled={reporting || status === 'loading'}
+          <div className={`hop-map-panel-body-wrap ${panelExpanded ? 'is-expanded' : ''}`}>
+            <div className="hop-map-panel-body">
+              <div className="hop-map-controls-row">
+                <select
+                  className="hop-map-select"
+                  value={startId}
+                  onChange={(e) => setStartId(e.target.value)}
+                  disabled={status === 'loading'}
                 >
-                  {level.label}
+                  {features.map((f) => (
+                    <option key={f.properties.id} value={f.properties.id}>
+                      {f.properties.name}
+                    </option>
+                  ))}
+                </select>
+                <Navigation2 size={13} className="hop-map-controls-arrow" />
+                <select
+                  className="hop-map-select"
+                  value={endId}
+                  onChange={(e) => setEndId(e.target.value)}
+                  disabled={status === 'loading'}
+                >
+                  {features.map((f) => (
+                    <option key={f.properties.id} value={f.properties.id}>
+                      {f.properties.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+    
+              <div className="hop-map-controls-row">
+                <label className="hop-map-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={accessibleOnly}
+                    onChange={(e) => setAccessibleOnly(e.target.checked)}
+                  />
+                  <Accessibility size={13} />
+                  <span>Accessible only</span>
+                  <Info size={12} className="hop-map-info-icon" title={ACCESSIBLE_DISCLAIMER} />
+                </label>
+                <button className="hop-map-btn hop-map-btn-primary" onClick={findRoute} disabled={routing || status === 'loading'}>
+                  {routing ? <Loader2 size={13} className="hop-spin" /> : <Navigation2 size={13} />}
+                  <span>Find route</span>
                 </button>
-              ))}
+              </div>
+    
+              {routeNote && <div className="hop-map-route-note mono">{routeNote}</div>}
+    
+              <div className="hop-map-report-block">
+                <div className="hop-map-report-label">Report crowd level here</div>
+                <select
+                  className="hop-map-select"
+                  value={reportLocationId}
+                  onChange={(e) => setReportLocationId(e.target.value)}
+                  disabled={status === 'loading'}
+                >
+                  {features.map((f) => (
+                    <option key={f.properties.id} value={f.properties.id}>
+                      {f.properties.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="hop-map-report-buttons">
+                  {REPORT_LEVELS.map((level) => (
+                    <button
+                      key={level.label}
+                      className={`hop-map-report-btn hop-map-report-btn-${level.label.toLowerCase()}`}
+                      onClick={() => submitReport(level.value)}
+                      disabled={reporting || status === 'loading'}
+                    >
+                      {level.label}
+                    </button>
+                  ))}
+                </div>
+                {reportFeedback && <div className="hop-map-route-note mono">{reportFeedback}</div>}
+              </div>
             </div>
-            {reportFeedback && <div className="hop-map-route-note mono">{reportFeedback}</div>}
           </div>
         </div>
       )}

@@ -613,6 +613,12 @@ export default function App() {
         </div>
       </section>
 
+      
+      {/* SECTION 4.5: UPCOMING EVENTS & RSVP*/}
+      <section id="un-events">
+        <HoppinEvents />
+      </section>
+
       {/* ============================================================
           SECTION 4: STUDENT SEMESTER TIME-SAVINGS CALCULATOR
           ============================================================ */}
@@ -725,10 +731,6 @@ export default function App() {
         </div>
       </section>
            
-      {/* SECTION 4.5: UPCOMING EVENTS & RSVP*/}
-      <section id="un-events">
-        <HoppinEvents />
-      </section>
       {/* ============================================================
           SECTION 6: CAMPUS PARTNERS & ON-ROUTE MONETIZATION
           ============================================================ */}

@@ -100,6 +100,10 @@ export default function App() {
     return matchesCategory && matchesSearch;
   });
 
+  //for the toggle added to live telemetry board 
+  const [isBoardExpanded, setIsBoardExpanded] = useState(false);
+
+
   // Calculate student savings
   const minSavedPerTrip = campusScale === 'mega' ? 4.5 : 3.0;
   const weeklyHoursSaved = ((dailyTrips * minSavedPerTrip * 5) / 60).toFixed(1);
@@ -358,7 +362,10 @@ export default function App() {
                     <button
                       key={tab.id}
                       className={`hop-chip ${boardCategory === tab.id ? 'active' : ''}`}
-                      onClick={() => setBoardCategory(tab.id)}
+                      onClick={() => {
+                        setBoardCategory(tab.id);
+                        setIsBoardExpanded(false); // Reset expand state on tab change
+                      }}
                     >
                       <TabIcon size={13} />
                       <span>{tab.label}</span>
@@ -373,132 +380,182 @@ export default function App() {
                   type="text"
                   placeholder="Filter facility or corridor..."
                   value={searchFilter}
-                  onChange={(e) => setSearchFilter(e.target.value)}
+                  onChange={(e) => {
+                    setSearchFilter(e.target.value);
+                    setIsBoardExpanded(true); // Auto-expand when searching
+                  }}
                   className="hop-search-input mono"
                 />
               </div>
             </div>
 
-            {/* Desktop Table View */}
-            <div className="hop-table-container hide-on-mobile">
-              <div className="hop-table-head">
-                <div className="th-loc">CAMPUS FACILITY / CORRIDOR</div>
-                <div className="th-status text-center">CROWD STATUS</div>
-                <div className="th-occ">LIVE OCCUPANCY & SEATS</div>
-                <div className="th-eta text-right">PREDICTED WAIT</div>
-                <div className="th-pin text-right">PIN</div>
-              </div>
+            {/* --- DISPLAY LOGIC FOR EXPAND/COLLAPSE --- */}
+            {(() => {
+              const INITIAL_ROW_COUNT = 4;
+              const displayedBoardRows = isBoardExpanded ? filteredBoardRows : filteredBoardRows.slice(0, INITIAL_ROW_COUNT);
+              const showExpandButton = filteredBoardRows.length > INITIAL_ROW_COUNT;
 
-              <div className="hop-table-rows">
-                {filteredBoardRows.length === 0 ? (
-                  <div className="hop-no-results mono">
-                    No facilities found matching "{searchFilter}".
+              return (
+                <>
+                  {/* Desktop Table View */}
+                  <div className="hop-table-container hide-on-mobile">
+                    <div className="hop-table-head">
+                      <div className="th-loc">CAMPUS FACILITY / CORRIDOR</div>
+                      <div className="th-status text-center">CROWD STATUS</div>
+                      <div className="th-occ">LIVE OCCUPANCY & SEATS</div>
+                      <div className="th-eta text-right">PREDICTED WAIT</div>
+                      <div className="th-pin text-right">PIN</div>
+                    </div>
+
+                    <div className="hop-table-rows">
+                      {displayedBoardRows.length === 0 ? (
+                        <div className="hop-no-results mono">
+                          No facilities found matching "{searchFilter}".
+                        </div>
+                      ) : (
+                        displayedBoardRows.map((row) => {
+                          const isPinned = pinnedRows.includes(row.id);
+                          const isCrowded = isRushHour ? row.occ > 50 : row.occ > 80;
+                          const statusLabel = isCrowded ? (row.occ > 85 ? 'FULL' : 'BUSY') : 'CLEAR';
+                          const statusCls = statusLabel === 'FULL' ? 'status-full' : statusLabel === 'BUSY' ? 'status-busy' : 'status-clear';
+                          const occPct = isRushHour ? Math.min(100, row.occ + 8) : Math.max(15, row.occ - 25);
+
+                          return (
+                            <div key={row.id} className="hop-table-row">
+                              
+                              <div className="tr-loc">
+                                <div className="tr-loc-name">{row.loc}</div>
+                                <div className="tr-loc-sub">{row.trend}</div>
+                              </div>
+
+                              <div className="tr-status text-center">
+                                <span className={`hop-status-badge ${statusCls} mono`}>
+                                  <span className="status-indicator" />
+                                  {statusLabel}
+                                </span>
+                              </div>
+
+                              <div className="tr-occ">
+                                <div className="hop-bar-track">
+                                  <div 
+                                    className={`hop-bar-fill ${statusCls}`} 
+                                    style={{ width: `${occPct}%` }} 
+                                  />
+                                </div>
+                                <div className="hop-occ-meta mono">
+                                  <span>{occPct}% Capacity</span>
+                                  <span className="text-mint">{row.free}</span>
+                                </div>
+                              </div>
+
+                              <div className="tr-eta text-right mono">
+                                <span className="eta-badge">{isRushHour ? row.eta : 'No delay'}</span>
+                              </div>
+
+                              <div className="tr-pin text-right">
+                                <button 
+                                  className={`hop-pin-btn ${isPinned ? 'is-pinned' : ''}`}
+                                  onClick={() => togglePin(row.id)}
+                                  title={isPinned ? 'Remove bookmark' : 'Pin to favourites'}
+                                >
+                                  <Bookmark size={15} />
+                                </button>
+                              </div>
+
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  filteredBoardRows.map((row) => {
-                    const isPinned = pinnedRows.includes(row.id);
-                    const isCrowded = isRushHour ? row.occ > 50 : row.occ > 80;
-                    const statusLabel = isCrowded ? (row.occ > 85 ? 'FULL' : 'BUSY') : 'CLEAR';
-                    const statusCls = statusLabel === 'FULL' ? 'status-full' : statusLabel === 'BUSY' ? 'status-busy' : 'status-clear';
-                    const occPct = isRushHour ? Math.min(100, row.occ + 8) : Math.max(15, row.occ - 25);
 
-                    return (
-                      <div key={row.id} className="hop-table-row">
-                        
-                        <div className="tr-loc">
-                          <div className="tr-loc-name">{row.loc}</div>
-                          <div className="tr-loc-sub">{row.trend}</div>
-                        </div>
+                  {/* Mobile Cards View */}
+                  <div className="hop-mobile-board-list show-on-mobile">
+                    {displayedBoardRows.map((row) => {
+                      const isPinned = pinnedRows.includes(row.id);
+                      const isCrowded = isRushHour ? row.occ > 50 : row.occ > 80;
+                      const statusLabel = isCrowded ? (row.occ > 85 ? 'FULL' : 'BUSY') : 'CLEAR';
+                      const statusCls = statusLabel === 'FULL' ? 'status-full' : statusLabel === 'BUSY' ? 'status-busy' : 'status-clear';
+                      const occPct = isRushHour ? Math.min(100, row.occ + 8) : Math.max(15, row.occ - 25);
 
-                        <div className="tr-status text-center">
-                          <span className={`hop-status-badge ${statusCls} mono`}>
-                            <span className="status-indicator" />
-                            {statusLabel}
-                          </span>
-                        </div>
-
-                        <div className="tr-occ">
-                          <div className="hop-bar-track">
-                            <div 
-                              className={`hop-bar-fill ${statusCls}`} 
-                              style={{ width: `${occPct}%` }} 
-                            />
+                      return (
+                        <div key={row.id} className="hop-mobile-card">
+                          <div className="hmc-header">
+                            <div className="hmc-loc">
+                              <div className="hmc-title">{row.loc}</div>
+                              <div className="hmc-sub">{row.trend}</div>
+                            </div>
+                            <span className={`hop-status-badge ${statusCls} mono`}>
+                              {statusLabel}
+                            </span>
                           </div>
-                          <div className="hop-occ-meta mono">
-                            <span>{occPct}% Capacity</span>
-                            <span className="text-mint">{row.free}</span>
+
+                          <div className="hmc-occ-box">
+                            <div className="hop-bar-track">
+                              <div className={`hop-bar-fill ${statusCls}`} style={{ width: `${occPct}%` }} />
+                            </div>
+                            <div className="hmc-occ-labels mono">
+                              <span>{occPct}% Capacity</span>
+                              <span className="text-mint">{row.free}</span>
+                            </div>
+                          </div>
+
+                          <div className="hmc-footer">
+                            <div className="hmc-eta mono">
+                              <Clock size={12} />
+                              <span>{isRushHour ? row.eta : 'No delay'}</span>
+                            </div>
+                            <button 
+                              className={`hop-pin-btn-mobile ${isPinned ? 'is-pinned' : ''}`}
+                              onClick={() => togglePin(row.id)}
+                            >
+                              <Bookmark size={14} />
+                              <span>{isPinned ? 'Saved' : 'Pin'}</span>
+                            </button>
                           </div>
                         </div>
+                      );
+                    })}
+                  </div>
 
-                        <div className="tr-eta text-right mono">
-                          <span className="eta-badge">{isRushHour ? row.eta : 'No delay'}</span>
-                        </div>
-
-                        <div className="tr-pin text-right">
-                          <button 
-                            className={`hop-pin-btn ${isPinned ? 'is-pinned' : ''}`}
-                            onClick={() => togglePin(row.id)}
-                            title={isPinned ? 'Remove bookmark' : 'Pin to favourites'}
-                          >
-                            <Bookmark size={15} />
-                          </button>
-                        </div>
-
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-
-            {/* Mobile Cards View */}
-            <div className="hop-mobile-board-list show-on-mobile">
-              {filteredBoardRows.map((row) => {
-                const isPinned = pinnedRows.includes(row.id);
-                const isCrowded = isRushHour ? row.occ > 50 : row.occ > 80;
-                const statusLabel = isCrowded ? (row.occ > 85 ? 'FULL' : 'BUSY') : 'CLEAR';
-                const statusCls = statusLabel === 'FULL' ? 'status-full' : statusLabel === 'BUSY' ? 'status-busy' : 'status-clear';
-                const occPct = isRushHour ? Math.min(100, row.occ + 8) : Math.max(15, row.occ - 25);
-
-                return (
-                  <div key={row.id} className="hop-mobile-card">
-                    <div className="hmc-header">
-                      <div className="hmc-loc">
-                        <div className="hmc-title">{row.loc}</div>
-                        <div className="hmc-sub">{row.trend}</div>
-                      </div>
-                      <span className={`hop-status-badge ${statusCls} mono`}>
-                        {statusLabel}
-                      </span>
-                    </div>
-
-                    <div className="hmc-occ-box">
-                      <div className="hop-bar-track">
-                        <div className={`hop-bar-fill ${statusCls}`} style={{ width: `${occPct}%` }} />
-                      </div>
-                      <div className="hmc-occ-labels mono">
-                        <span>{occPct}% Capacity</span>
-                        <span className="text-mint">{row.free}</span>
-                      </div>
-                    </div>
-
-                    <div className="hmc-footer">
-                      <div className="hmc-eta mono">
-                        <Clock size={12} />
-                        <span>{isRushHour ? row.eta : 'No delay'}</span>
-                      </div>
-                      <button 
-                        className={`hop-pin-btn-mobile ${isPinned ? 'is-pinned' : ''}`}
-                        onClick={() => togglePin(row.id)}
+                  {/* Expand / Collapse Button */}
+                  {showExpandButton && (
+                    <div style={{ display: 'flex', justifyContent: 'center', padding: '16px 0', borderTop: '1px solid rgba(148,163,184,0.08)' }}>
+                      <button
+                        onClick={() => setIsBoardExpanded(!isBoardExpanded)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '8px 20px',
+                          background: 'rgba(2,11,14,0.6)',
+                          border: '1px solid rgba(16,231,157,0.3)',
+                          borderRadius: '999px',
+                          color: '#10E79D',
+                          fontFamily: 'monospace',
+                          fontSize: '11px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          transition: 'all 0.25s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(16,231,157,0.1)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'rgba(2,11,14,0.6)';
+                        }}
                       >
-                        <Bookmark size={14} />
-                        <span>{isPinned ? 'Saved' : 'Pin'}</span>
+                        {isBoardExpanded ? (
+                          <>SHOW LESS <ChevronUp size={14} /></>
+                        ) : (
+                          <>SHOW ALL {filteredBoardRows.length} LOCATIONS <ChevronDown size={14} /></>
+                        )}
                       </button>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  )}
+                </>
+              );
+            })()}
 
             {/* Terminal Live Sync Ticker */}
             <div className="hop-term-ticker">
@@ -511,7 +568,6 @@ export default function App() {
             </div>
 
           </div>
-
         </div>
       </section>
 

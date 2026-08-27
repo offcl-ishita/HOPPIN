@@ -139,19 +139,7 @@ export default function Navbar() {
                   <span>Interactive semester hours saved estimator</span>
                 </div>
               </a>
-              <a 
-                href="#hoppin-events" 
-                className="nav-mob-item"
-                onClick={() => setMobileOpen(false)}
-              >
-                <div className="nav-mob-icon" style={{ color: '#10E79D', background: 'rgba(16, 231, 157, 0.12)' }}>
-                  <Sparkles size={16} />
-                </div>
-                <div>
-                  <strong>Campus Event Radar</strong>
-                  <span>Fests, hackathons, seminars & RSVPs</span>
-                </div>
-              </a>
+              
 
               <a 
                 href="#un-directory" 

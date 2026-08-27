@@ -48,6 +48,11 @@ export default function Navbar() {
               </a>
             </li>
             <li>
+  <a href="#un-eateries" className="nav-link">
+    Eateries
+  </a>
+</li>
+            <li>
               <a href="#hoppin-events" className="nav-link">
                 Events
               </a>
@@ -128,7 +133,19 @@ export default function Navbar() {
                   <span>Interactive semester hours saved estimator</span>
                 </div>
               </a>
-
+<a 
+  href="#un-eateries" 
+  className="nav-mob-item"
+  onClick={() => setMobileOpen(false)}
+>
+  <div className="nav-mob-icon" style={{ color: '#EC4899', background: 'rgba(236, 72, 153, 0.12)' }}>
+    <Coffee size={16} />
+  </div>
+  <div>
+    <strong>On-Campus Eateries</strong>
+    <span>Verify food spots & quick bites on route</span>
+  </div>
+</a>
               <a
                 href="#hoppin-events"
                 className="nav-mob-item"

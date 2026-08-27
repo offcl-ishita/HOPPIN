@@ -17,14 +17,6 @@ const ACCESSIBLE_DISCLAIMER =
   'Prioritizes paved paths and avoids stairs where road data allows. May not ' +
   'reflect tactile paving, audio signals, or real-time obstructions.';
 
-// Crowdsourced report levels -> density_percent, matching the same
-// thresholds colorForDensity() already uses (below/50-80/above).
-const REPORT_LEVELS = [
-  { label: 'Low', value: 25 },
-  { label: 'Moderate', value: 60 },
-  { label: 'High', value: 90 },
-];
-
 // ---------------------------------------------------------------------------
 // Route provider. Returns { coordinates: [[lat,lng],...], distanceMeters,
 // durationSeconds } for a start/end pair and an "accessible" flag.
@@ -125,9 +117,6 @@ export default function CampusMap() {
   const [routing, setRouting] = useState(false);
   const [geoError, setGeoError] = useState('');
   const [userPosition, setUserPosition] = useState(null);
-  const [reportLocationId, setReportLocationId] = useState('');
-  const [reporting, setReporting] = useState(false);
-  const [reportFeedback, setReportFeedback] = useState('');
   const [panelExpanded, setPanelExpanded] = useState(false);
 
   // ---- map init (once) ----
@@ -345,51 +334,13 @@ export default function CampusMap() {
       });
   }, [features, updateHeatmap]);
 
-  // default start/end/report-target once locations arrive
+  // default start/end once locations arrive
   useEffect(() => {
     if (features.length >= 2 && !startId && !endId) {
       setStartId(String(features[0].properties.id));
       setEndId(String(features[1].properties.id));
     }
-    if (features.length >= 1 && !reportLocationId) {
-      setReportLocationId(String(features[0].properties.id));
-    }
-  }, [features, startId, endId, reportLocationId]);
-
-  // ---- crowdsourced density reporting ----
-  // Anonymous by design (matches the backend: POST /crowd-readings takes no
-  // auth and no identifying field) -- no "reported_by" is sent or stored.
-  // Submits straight to the existing crowd_readings table; the 15-min
-  // averaging in GET /locations (api/crud.py) is what makes multiple
-  // independent taps for the same venue blend together instead of the
-  // newest one clobbering the rest.
-  const submitReport = async (densityPercent) => {
-    if (!reportLocationId || reporting) return;
-
-    setReporting(true);
-    setReportFeedback('');
-
-    try {
-      const res = await fetch(`${API_BASE}/crowd-readings`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          location_id: Number(reportLocationId),
-          density_percent: densityPercent,
-        }),
-      });
-      if (!res.ok) throw new Error(`POST /crowd-readings failed: ${res.status}`);
-
-      setReportFeedback('Thanks — reported!');
-      loadLocations(); // refresh now rather than waiting up to 20s for the next poll
-    } catch (err) {
-      console.error(err);
-      setReportFeedback('Could not submit — try again.');
-    } finally {
-      setReporting(false);
-      setTimeout(() => setReportFeedback(''), 3000);
-    }
-  };
+  }, [features, startId, endId]);
 
   const findRoute = async () => {
     const map = mapRef.current;
@@ -454,6 +405,7 @@ export default function CampusMap() {
       const durationMin = Math.round(route.durationSeconds / 60);
       const label = accessibleOnly ? 'Accessible route estimate' : 'Driving-network estimate';
       setRouteNote(`${label}: ${distanceKm} km · ${durationMin} min`);
+      setPanelExpanded(true); // surface the result even if the panel was collapsed
     } catch (err) {
       console.error(err);
       setRouteNote('Could not fetch a route right now — the routing service may be rate-limited. Try again shortly.');
@@ -541,35 +493,11 @@ export default function CampusMap() {
               </div>
     
               {routeNote && <div className="hop-map-route-note mono">{routeNote}</div>}
-    
-              <div className="hop-map-report-block">
-                <div className="hop-map-report-label">Report crowd level here</div>
-                <select
-                  className="hop-map-select"
-                  value={reportLocationId}
-                  onChange={(e) => setReportLocationId(e.target.value)}
-                  disabled={status === 'loading'}
-                >
-                  {features.map((f) => (
-                    <option key={f.properties.id} value={f.properties.id}>
-                      {f.properties.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="hop-map-report-buttons">
-                  {REPORT_LEVELS.map((level) => (
-                    <button
-                      key={level.label}
-                      className={`hop-map-report-btn hop-map-report-btn-${level.label.toLowerCase()}`}
-                      onClick={() => submitReport(level.value)}
-                      disabled={reporting || status === 'loading'}
-                    >
-                      {level.label}
-                    </button>
-                  ))}
-                </div>
-                {reportFeedback && <div className="hop-map-route-note mono">{reportFeedback}</div>}
-              </div>
+
+              {/* TODO: route results (cards with duration/crowd level/
+                  recommendation) render here once "Find route" returns.
+                  The crowd-report section that used to be here moved to
+                  CrowdReportSection.jsx -- render that elsewhere if needed. */}
             </div>
           </div>
         </div>

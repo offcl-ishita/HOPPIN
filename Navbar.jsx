@@ -42,22 +42,21 @@ export default function Navbar() {
                 Bypass Map
               </a>
             </li>
-<li>      
-  <a href="#un-eateries" className="nav-link">
-    Eateries
-  </a>
-</li>
+            <li>
+              <a href="#un-eateries" className="nav-link">
+                Eateries
+              </a>
+            </li>
             <li>
               <a href="#hoppin-events" className="nav-link">
                 Events
               </a>
             </li>
-          <li>
+            <li>
               <a href="#un-calculator" className="nav-link">
                 Time Reclaimed
               </a>
             </li>
-            <li>
             <li>
               <a href="#un-partners" className="nav-link">
                 Campus Perks

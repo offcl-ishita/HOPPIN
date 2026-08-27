@@ -5,7 +5,7 @@ import {
   Navigation, Compass, Radio, Clock, Flame,
   MapPin, Bell, Shield, ArrowRight, ArrowUpRight, CheckCircle2,
   Layers, Sliders, Coffee, BookOpen, Dumbbell,
-  Utensils, ChevronRight, ChevronDown, RotateCcw,
+  Utensils, ChevronRight, ChevronDown, ChevronUp, RotateCcw,
   Zap, Eye, Bookmark, Activity, Info, School, Check,
   Smartphone, Share2, Award, Search, Copy
 } from 'lucide-react';
@@ -1751,11 +1751,7 @@ export function HoppinEvents() {
 
 
 /* ============================================================
-   HOPPIN EATERIES — ON-CAMPUS DINING DIRECTORY
-   ============================================================ */
-
-/* ============================================================
-   HOPPIN EATERIES — ON-CAMPUS DINING DIRECTORY WITH SAVED FEATURE
+   HOPPIN EATERIES — ON-CAMPUS DINING DIRECTORY WITH EXPAND TOGGLE
    ============================================================ */
 
 export function HoppinEateries() {
@@ -1781,6 +1777,9 @@ export function HoppinEateries() {
 
   const [activeZone, setActiveZone] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // NEW STATE: Tracks if the list is expanded or collapsed
+  const [isExpanded, setIsExpanded] = useState(false);
 
   /* Save / Bookmark Toggle */
   const toggleSaveEatery = (id) => {
@@ -1807,6 +1806,11 @@ export function HoppinEateries() {
   });
 
   const savedCount = eateries.filter((item) => item.isSaved).length;
+
+  // LOGIC: Show only 3 items initially (one row), or all if expanded
+  const INITIAL_ROW_COUNT = 3; 
+  const displayedEateries = isExpanded ? filteredEateries : filteredEateries.slice(0, INITIAL_ROW_COUNT);
+  const showExpandButton = filteredEateries.length > INITIAL_ROW_COUNT;
 
   return (
     <section
@@ -1859,7 +1863,10 @@ export function HoppinEateries() {
             ].map(([val, label]) => (
               <button
                 key={val}
-                onClick={() => setActiveZone(val)}
+                onClick={() => {
+                  setActiveZone(val);
+                  setIsExpanded(false); // Reset to collapsed when changing tabs
+                }}
                 style={{
                   border: activeZone === val ? '1px solid #10E79D' : '1px solid rgba(148,163,184,0.15)',
                   background: activeZone === val ? 'rgba(16,231,157,0.12)' : 'rgba(2,11,14,0.7)',
@@ -1884,7 +1891,10 @@ export function HoppinEateries() {
               type="text"
               placeholder="Search eatery or location..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setIsExpanded(true); // Auto-expand when user searches so they see all results
+              }}
               style={{
                 width: '100%',
                 boxSizing: 'border-box',
@@ -1903,14 +1913,14 @@ export function HoppinEateries() {
 
         {/* Eateries Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '18px' }}>
-          {filteredEateries.length === 0 ? (
+          {displayedEateries.length === 0 ? (
             <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '60px 20px', background: '#081117', border: '1px solid rgba(148,163,184,0.12)', borderRadius: '20px' }}>
               <Bookmark size={30} style={{ color: '#475569', marginBottom: '12px' }} />
               <h3 style={{ color: '#CBD5E1', margin: '0 0 6px' }}>No saved eateries found</h3>
               <p style={{ color: '#64748B', fontSize: '13px', margin: 0 }}>Click the bookmark button on any eatery card to save it here.</p>
             </div>
           ) : (
-            filteredEateries.map((item) => (
+            displayedEateries.map((item) => (
               <div
                 key={item.id}
                 style={{
@@ -1998,6 +2008,45 @@ export function HoppinEateries() {
             ))
           )}
         </div>
+
+        {/* Expand / Collapse Button */}
+        {showExpandButton && (
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '32px' }}>
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 24px',
+                background: 'rgba(2,11,14,0.8)',
+                border: '1px solid rgba(16,231,157,0.4)',
+                borderRadius: '999px',
+                color: '#10E79D',
+                fontFamily: 'monospace',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                transition: 'all 0.25s ease',
+                boxShadow: '0 0 15px rgba(16,231,157,0.05)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(16,231,157,0.1)';
+                e.currentTarget.style.boxShadow = '0 0 20px rgba(16,231,157,0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(2,11,14,0.8)';
+                e.currentTarget.style.boxShadow = '0 0 15px rgba(16,231,157,0.05)';
+              }}
+            >
+              {isExpanded ? (
+                <>SHOW LESS <ChevronUp size={16} /></>
+              ) : (
+                <>SHOW ALL {filteredEateries.length} SPOTS <ChevronDown size={16} /></>
+              )}
+            </button>
+          </div>
+        )}
 
       </div>
     </section>

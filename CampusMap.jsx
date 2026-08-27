@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
+import 'leaflet.heat';
 import { RefreshCw, Navigation2, Loader2, WifiOff, LocateFixed, AlertTriangle, Accessibility, Info } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import './CampusMap.css';
@@ -55,6 +56,25 @@ function colorForDensity(density) {
   return '#10E79D'; // mint
 }
 
+// Same palette as colorForDensity, as gradient stops for leaflet.heat
+// (0-1 ratio -> color). Low ~0.3, moderate ~0.6, high ~1.0.
+const HEAT_GRADIENT = { 0.0: '#10E79D', 0.3: '#10E79D', 0.6: '#F59E0B', 1.0: '#EF4444' };
+
+// Real crowd_density source: each GeoJSON feature from /locations already
+// carries { density_percent, status_label } (see loadLocations() below) --
+// no mock data needed here. This just reshapes that into leaflet.heat's
+// [lat, lng, intensity] triples, intensity normalized from 0-100 to 0-1,
+// skipping locations with no reading yet (density_percent === null) since
+// a 0-intensity point would misleadingly read as "confirmed quiet".
+function featuresToHeatPoints(features) {
+  return features
+    .filter((f) => f.properties.density_percent !== null && f.properties.density_percent !== undefined)
+    .map((f) => {
+      const [lng, lat] = f.geometry.coordinates;
+      return [lat, lng, f.properties.density_percent / 100];
+    });
+}
+
 function geolocationErrorMessage(err) {
   switch (err.code) {
     case err.PERMISSION_DENIED:
@@ -76,6 +96,8 @@ export default function CampusMap() {
   const routeIconRef = useRef(null);
   const userMarkerRef = useRef(null);
   const hasCenteredOnUserRef = useRef(false);
+  const heatLayerRef = useRef(null);
+  const heatTooltipLayerRef = useRef(null);
 
   const [features, setFeatures] = useState([]);
   const [status, setStatus] = useState('loading'); // loading | ready | offline
@@ -101,7 +123,32 @@ export default function CampusMap() {
       maxZoom: 19,
     }).addTo(map);
 
+    // Dedicated pane below Leaflet's default overlayPane (zIndex 400, where
+    // polylines/circle markers render), so the heat layer sits underneath
+    // the route line and location markers regardless of add order --
+    // bringToFront() on the route (below) is belt-and-suspenders on top of
+    // this, not load-bearing by itself.
+    map.createPane('heatPane');
+    map.getPane('heatPane').style.zIndex = 350;
+    map.getPane('heatPane').style.pointerEvents = 'none';
+
+    heatLayerRef.current = L.heatLayer([], {
+      pane: 'heatPane',
+      radius: 35,
+      blur: 25,
+      maxZoom: 19,
+      max: 1.0,
+      minOpacity: 0.35,
+      gradient: HEAT_GRADIENT,
+    }).addTo(map);
+
+    heatTooltipLayerRef.current = L.layerGroup().addTo(map);
     markerLayerRef.current = L.layerGroup().addTo(map);
+
+    L.control
+      .layers(null, { 'Crowd heatmap': heatLayerRef.current }, { position: 'topright', collapsed: false })
+      .addTo(map);
+
     mapRef.current = map;
 
     return () => {
@@ -216,6 +263,53 @@ export default function CampusMap() {
     return () => clearInterval(interval);
   }, [loadLocations]);
 
+  // ---- crowd density heatmap ----
+  // Small, focused updater: takes ready-made [lat, lng, intensity] triples
+  // and pushes them onto the existing heat layer. Kept separate from the
+  // features-fetching logic above so the exact same function can later be
+  // called from a faster-cadence source (a polling interval shorter than
+  // loadLocations' 20s, or a websocket message handler) without touching
+  // anything else here -- just call updateHeatmap(freshPoints) from there.
+  const updateHeatmap = useCallback((newPoints) => {
+    if (heatLayerRef.current) {
+      heatLayerRef.current.setLatLngs(newPoints);
+    }
+  }, []);
+
+  // TODO: hook a real live feed in here (websocket onmessage, or a second
+  // faster setInterval) calling updateHeatmap(freshPoints) directly. Not
+  // built yet -- for now this effect is the only caller, riding on the
+  // same `features` state loadLocations() already refreshes every 20s
+  // above, so the heatmap already updates live on that cadence for free.
+  useEffect(() => {
+    updateHeatmap(featuresToHeatPoints(features));
+
+    const tooltipLayer = heatTooltipLayerRef.current;
+    if (!tooltipLayer) return;
+    tooltipLayer.clearLayers();
+
+    features
+      .filter((f) => f.properties.density_percent !== null && f.properties.density_percent !== undefined)
+      .forEach((f) => {
+        const [lng, lat] = f.geometry.coordinates;
+        const { name, density_percent, status_label } = f.properties;
+
+        // Invisible but interactive -- purely a hover target, the heat
+        // layer itself does the visible rendering.
+        L.circleMarker([lat, lng], {
+          radius: 22,
+          opacity: 0,
+          fillOpacity: 0,
+          interactive: true,
+        })
+          .bindTooltip(`${name} — ${density_percent}% (${status_label ?? 'Unknown'})`, {
+            direction: 'top',
+            className: 'hop-map-heat-tooltip',
+          })
+          .addTo(tooltipLayer);
+      });
+  }, [features, updateHeatmap]);
+
   // default start/end once locations arrive
   useEffect(() => {
     if (features.length >= 2 && !startId && !endId) {
@@ -265,6 +359,7 @@ export default function CampusMap() {
         dashArray: '6 8',
       }).addTo(map);
       routeLayerRef.current = line;
+      line.bringToFront(); // route stays visible above the heatmap layer
 
       if (accessibleOnly) {
         const startLatLng = route.coordinates[0];

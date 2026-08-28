@@ -43,13 +43,13 @@ export default function Navbar() {
               </a>
             </li>
             <li>
-              <a href="#un-eateries" className="nav-link">
-                Eateries
+              <a href="#hoppin-events" className="nav-link">
+                Events
               </a>
             </li>
             <li>
-              <a href="#hoppin-events" className="nav-link">
-                Events
+              <a href="#un-eateries" className="nav-link">
+                Eateries
               </a>
             </li>
             <li>
@@ -63,8 +63,8 @@ export default function Navbar() {
               </a>
             </li>
             <li>
-              <a href="#un-faq" className="nav-link">
-                FAQ
+              <a href="#un-feedback" className="nav-link">
+                Feedback
               </a>
             </li>
           </ul>
@@ -121,20 +121,6 @@ export default function Navbar() {
               </a>
 
               <a
-                href="#un-eateries"
-                className="nav-mob-item"
-                onClick={() => setMobileOpen(false)}
-              >
-                <div className="nav-mob-icon" style={{ color: '#EC4899', background: 'rgba(236, 72, 153, 0.12)' }}>
-                  <Coffee size={16} />
-                </div>
-                <div>
-                  <strong>On-Campus Eateries</strong>
-                  <span>Verify food spots & quick bites on route</span>
-                </div>
-              </a>
-
-              <a
                 href="#hoppin-events"
                 className="nav-mob-item"
                 onClick={() => setMobileOpen(false)}
@@ -145,6 +131,20 @@ export default function Navbar() {
                 <div>
                   <strong>Campus Event Radar</strong>
                   <span>Fests, hackathons, seminars & RSVPs</span>
+                </div>
+              </a>
+
+              <a
+                href="#un-eateries"
+                className="nav-mob-item"
+                onClick={() => setMobileOpen(false)}
+              >
+                <div className="nav-mob-icon" style={{ color: '#EC4899', background: 'rgba(236, 72, 153, 0.12)' }}>
+                  <Coffee size={16} />
+                </div>
+                <div>
+                  <strong>On-Campus Eateries</strong>
+                  <span>Verify food spots & quick bites on route</span>
                 </div>
               </a>
 
@@ -177,16 +177,16 @@ export default function Navbar() {
               </a>
 
               <a
-                href="#un-faq"
+                href="#un-feedback"
                 className="nav-mob-item"
                 onClick={() => setMobileOpen(false)}
               >
                 <div className="nav-mob-icon" style={{ color: '#38BDF8', background: 'rgba(56, 189, 248, 0.12)' }}>
-                  <Info size={16} />
+                  <Sparkles size={16} />
                 </div>
                 <div>
-                  <strong>FAQ & Rollout</strong>
-                  <span>Fall 2026 university deployment guide</span>
+                  <strong>Community Vibe Check</strong>
+                  <span>Rate stars & slide feedback to devs</span>
                 </div>
               </a>
 

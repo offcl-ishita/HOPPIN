@@ -1134,7 +1134,7 @@ function HoppinEvents() {
   return (
     <section
       className="hop-section hop-events-section"
-      id="un-events"
+      id="hoppin-events"
       style={{
         background:
           'radial-gradient(circle at 85% 10%, rgba(16,231,157,0.07), transparent 28%), #02090d',

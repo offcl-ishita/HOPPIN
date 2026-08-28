@@ -17,10 +17,12 @@ map-service/
     crud.py            SQL queries / GeoJSON building / route matching
     schemas.py         Pydantic request/response models
   sql/
-    schema.sql              PostGIS table definitions
-    seed.sql                Sample campus locations, crowd readings, paths -- run ONCE
-    seed_activity_data.sql  Demo crowd/issue/blockage activity -- re-runnable, run before each demo
-    reseed_demo.sh          Wrapper: psql "$DATABASE_URL" -f seed_activity_data.sql
+    schema.sql                  PostGIS table definitions
+    seed.sql                    Sample campus locations, crowd readings, paths -- run ONCE
+    seed_locations_full.sql     ~65 more campus locations (placeholder coords) -- run ONCE
+    update_coordinates_full.sql UPDATE template to correct each placeholder coordinate
+    seed_activity_data.sql      Demo crowd/issue/blockage activity -- re-runnable, run before each demo
+    reseed_demo.sh              Wrapper: psql "$DATABASE_URL" -f seed_activity_data.sql
   frontend/
     index.html         Leaflet map, single file, no build step
   requirements.txt
@@ -52,7 +54,21 @@ routing) decides what `/locations`, `/route`, etc. do.
 
    `seed.sql` has no delete-first logic -- it's meant to run **once**.
    Running it again duplicates every location and path.
-4. Before demoing, seed some live-looking activity (crowd readings,
+4. To populate the rest of the campus (hostels, academic blocks, named
+   food outlets, etc. -- everything beyond the original six venues), run
+   `sql/seed_locations_full.sql` once. It widens the `locations.category`
+   CHECK constraint first (new categories: `food_outlet`, `lab`, `gate`,
+   `market`, `bus_stand`, `atm`, `facility`), then inserts ~65 rows. Every
+   row uses a **placeholder** coordinate, clearly marked `-- [PLACEHOLDER]`
+   -- not surveyed. Correct them later with `sql/update_coordinates_full.sql`,
+   which has one `UPDATE ... WHERE name = '...'` template per row (see that
+   file's header for which locations most urgently need real coordinates
+   before a live demo).
+
+   ```bash
+   psql "$DATABASE_URL" -f sql/seed_locations_full.sql
+   ```
+5. Before demoing, seed some live-looking activity (crowd readings,
    issue reports, blockages) with `sql/seed_activity_data.sql` -- unlike
    `seed.sql`, this one clears and reseeds itself every time, so it's
    safe (expected, even) to re-run right before each demo:
@@ -66,7 +82,7 @@ routing) decides what `/locations`, `/route`, etc. do.
    counts readings from the last 10 minutes (see "How crowd density
    aggregates" below), so re-run this shortly before you actually show
    the map, not hours ahead.
-5. Get your **pooled** connection string: Project Settings -> Database ->
+6. Get your **pooled** connection string: Project Settings -> Database ->
    Connection string -> **Transaction** mode (port 6543). Use this, not the
    direct connection, for `DATABASE_URL` — see `.env.example` for why.
 

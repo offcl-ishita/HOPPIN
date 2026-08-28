@@ -99,6 +99,44 @@ const CAMPUS_BOUNDS = [
   [12.833, 80.054], // northeast
 ];
 
+// Display labels for locations.category (see schema.sql's CHECK constraint
+// for the full set of valid values). Used only to group/label the from/to
+// dropdowns -- falls back to the raw category string for anything missing
+// here so a new category never silently disappears from the list.
+const CATEGORY_LABELS = {
+  academic: 'Academic Blocks',
+  canteen: 'Canteens & Mess',
+  library: 'Library',
+  auditorium: 'Auditoriums',
+  hostel: 'Hostels',
+  food_outlet: 'Food Outlets',
+  lab: 'Labs',
+  gate: 'Gates & Entrances',
+  market: 'Market & Services',
+  bus_stand: 'Bus Stand',
+  atm: 'ATM',
+  facility: 'Other Facilities',
+};
+
+// Filters by name (case-insensitive substring) then buckets into
+// { categoryLabel: [features] } for <optgroup> rendering, category groups
+// sorted alphabetically by their display label so the order stays stable
+// as more categories get added.
+function groupFeaturesForDropdown(features, search) {
+  const query = search.trim().toLowerCase();
+  const filtered = query
+    ? features.filter((f) => f.properties.name.toLowerCase().includes(query))
+    : features;
+
+  const groups = {};
+  for (const f of filtered) {
+    const label = CATEGORY_LABELS[f.properties.category] || f.properties.category || 'Other';
+    if (!groups[label]) groups[label] = [];
+    groups[label].push(f);
+  }
+  return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
+}
+
 function colorForDensity(density) {
   if (density === null || density === undefined) return '#64748B'; // muted grey = no data
   if (density > 80) return '#EF4444'; // red
@@ -195,6 +233,8 @@ export default function CampusMap() {
   const [status, setStatus] = useState('loading'); // loading | ready | offline
   const [startId, setStartId] = useState('');
   const [endId, setEndId] = useState('');
+  const [startSearch, setStartSearch] = useState('');
+  const [endSearch, setEndSearch] = useState('');
   const [accessibleOnly, setAccessibleOnly] = useState(false);
   const [routeNote, setRouteNote] = useState('');
   const [routeBlocked, setRouteBlocked] = useState(false);
@@ -602,6 +642,28 @@ export default function CampusMap() {
 
           <div className={`hop-map-panel-body-wrap ${panelExpanded ? 'is-expanded' : ''}`}>
             <div className="hop-map-panel-body">
+              {/* Plain-text search filters each dropdown's options client-side
+                  (see groupFeaturesForDropdown) -- with 70+ locations now
+                  possible, scrolling a flat list stops being usable. */}
+              <div className="hop-map-controls-row">
+                <input
+                  type="text"
+                  className="hop-map-search-input"
+                  placeholder="Search from..."
+                  value={startSearch}
+                  onChange={(e) => setStartSearch(e.target.value)}
+                  disabled={status === 'loading'}
+                />
+                <input
+                  type="text"
+                  className="hop-map-search-input"
+                  placeholder="Search to..."
+                  value={endSearch}
+                  onChange={(e) => setEndSearch(e.target.value)}
+                  disabled={status === 'loading'}
+                />
+              </div>
+
               <div className="hop-map-controls-row">
                 <select
                   className="hop-map-select"
@@ -609,10 +671,14 @@ export default function CampusMap() {
                   onChange={(e) => setStartId(e.target.value)}
                   disabled={status === 'loading'}
                 >
-                  {features.map((f) => (
-                    <option key={f.properties.id} value={f.properties.id}>
-                      {f.properties.name}
-                    </option>
+                  {groupFeaturesForDropdown(features, startSearch).map(([categoryLabel, group]) => (
+                    <optgroup key={categoryLabel} label={categoryLabel}>
+                      {group.map((f) => (
+                        <option key={f.properties.id} value={f.properties.id}>
+                          {f.properties.name}
+                        </option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
                 <Navigation2 size={13} className="hop-map-controls-arrow" />
@@ -622,10 +688,14 @@ export default function CampusMap() {
                   onChange={(e) => setEndId(e.target.value)}
                   disabled={status === 'loading'}
                 >
-                  {features.map((f) => (
-                    <option key={f.properties.id} value={f.properties.id}>
-                      {f.properties.name}
-                    </option>
+                  {groupFeaturesForDropdown(features, endSearch).map(([categoryLabel, group]) => (
+                    <optgroup key={categoryLabel} label={categoryLabel}>
+                      {group.map((f) => (
+                        <option key={f.properties.id} value={f.properties.id}>
+                          {f.properties.name}
+                        </option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
               </div>

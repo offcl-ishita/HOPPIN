@@ -10,7 +10,10 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE TABLE IF NOT EXISTS locations (
     id          SERIAL PRIMARY KEY,
     name        TEXT NOT NULL,
-    category    TEXT NOT NULL CHECK (category IN ('canteen', 'library', 'auditorium', 'hostel', 'academic')),
+    category    TEXT NOT NULL CHECK (category IN (
+        'canteen', 'library', 'auditorium', 'hostel', 'academic',
+        'food_outlet', 'lab', 'gate', 'market', 'bus_stand', 'atm', 'facility'
+    )),
     geom        GEOMETRY(POINT, 4326) NOT NULL,
     capacity    INTEGER
 );

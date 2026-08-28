@@ -183,6 +183,27 @@
   padding: 6px 8px;
 }
 
+.hop-map-search-input {
+  flex: 1;
+  min-width: 0;
+  background: #141C34;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #F8FAFC;
+  font-family: var(--font-heading);
+  font-size: 11px;
+  padding: 5px 8px;
+}
+
+.hop-map-search-input::placeholder {
+  color: var(--hop-text-muted);
+}
+
+.hop-map-search-input:focus {
+  outline: none;
+  border-color: rgba(16, 231, 157, 0.5);
+}
+
 .hop-map-checkbox {
   display: inline-flex;
   align-items: center;

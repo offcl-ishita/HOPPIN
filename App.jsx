@@ -391,7 +391,7 @@ export default function App() {
 
             {/* --- DISPLAY LOGIC FOR EXPAND/COLLAPSE --- */}
             {(() => {
-              const INITIAL_ROW_COUNT = 4;
+              const INITIAL_ROW_COUNT = 2;
               const displayedBoardRows = isBoardExpanded ? filteredBoardRows : filteredBoardRows.slice(0, INITIAL_ROW_COUNT);
               const showExpandButton = filteredBoardRows.length > INITIAL_ROW_COUNT;
 

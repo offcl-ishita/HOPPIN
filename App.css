@@ -3010,3 +3010,128 @@ input {
     display: none !important;
   }
 }
+
+/* --- GEN-Z FEEDBACK SECTION STYLING --- */
+.hop-feedback-section {
+  position: relative;
+  padding: 80px 0;
+  background: radial-gradient(circle at 50% 50%, rgba(16, 231, 157, 0.05), transparent 70%), #02090d;
+}
+
+.hop-feedback-card {
+  background: linear-gradient(145deg, rgba(8, 17, 23, 0.95), rgba(2, 11, 14, 0.98));
+  border: 1px solid rgba(16, 231, 157, 0.2);
+  border-radius: 24px;
+  padding: 48px 32px;
+  text-align: center;
+  max-width: 720px;
+  margin: 0 auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(16, 231, 157, 0.05);
+}
+
+.hop-feedback-form {
+  margin-top: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.hop-star-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.hop-stars-row {
+  display: flex;
+  gap: 12px;
+}
+
+.hop-star-btn {
+  background: transparent;
+  border: none;
+  font-size: 38px;
+  color: #334155;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.2s ease;
+  padding: 0;
+}
+
+.hop-star-btn:hover,
+.hop-star-btn.active {
+  color: #10E79D;
+  transform: scale(1.2);
+  text-shadow: 0 0 15px rgba(16, 231, 157, 0.5);
+}
+
+.hop-star-tagline {
+  font-size: 12px;
+  color: #38BDF8;
+  height: 18px;
+  letter-spacing: 0.05em;
+}
+
+.hop-feedback-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hop-feedback-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  background: #020B0E;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 14px;
+  padding: 16px;
+  color: #E2E8F0;
+  font-size: 12px;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hop-feedback-textarea:focus {
+  border-color: #10E79D;
+  box-shadow: 0 0 15px rgba(16, 231, 157, 0.15);
+}
+
+.hop-feedback-submit {
+  width: 100%;
+  justify-content: center;
+  border-radius: 14px;
+  padding: 14px;
+  cursor: pointer;
+}
+
+.hop-feedback-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.hop-feedback-success {
+  margin-top: 32px;
+  padding: 24px;
+  background: rgba(16, 231, 157, 0.04);
+  border: 1px dashed rgba(16, 231, 157, 0.3);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.hop-feedback-success h3 {
+  color: #F8FAFC;
+  margin: 0;
+  font-size: 18px;
+}
+
+.hop-feedback-success p {
+  color: #94A3B8;
+  font-size: 13px;
+  margin: 0;
+}

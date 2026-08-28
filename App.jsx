@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 
-
 import {
   Navigation, Compass, Radio, Clock, Flame,
   MapPin, Bell, Shield, ArrowRight, ArrowUpRight, CheckCircle2,
   Layers, Sliders, Coffee, BookOpen, Dumbbell,
   Utensils, ChevronRight, ChevronDown, ChevronUp, RotateCcw,
   Zap, Eye, Bookmark, Activity, Info, School, Check,
-  Smartphone, Share2, Award, Search, Copy
+  Smartphone, Share2, Award, Search, Copy, Sparkles, CalendarDays
 } from 'lucide-react';
 import Navbar from './Navbar';
 import Footer from './Footer';
@@ -109,7 +108,6 @@ export default function App() {
 
   //for the toggle added to live telemetry board 
   const [isBoardExpanded, setIsBoardExpanded] = useState(false);
-
 
   // Calculate student savings
   const minSavedPerTrip = campusScale === 'mega' ? 4.5 : 3.0;
@@ -371,7 +369,7 @@ export default function App() {
                       className={`hop-chip ${boardCategory === tab.id ? 'active' : ''}`}
                       onClick={() => {
                         setBoardCategory(tab.id);
-                        setIsBoardExpanded(false); // Reset expand state on tab change
+                        setIsBoardExpanded(false);
                       }}
                     >
                       <TabIcon size={13} />
@@ -389,7 +387,7 @@ export default function App() {
                   value={searchFilter}
                   onChange={(e) => {
                     setSearchFilter(e.target.value);
-                    setIsBoardExpanded(true); // Auto-expand when searching
+                    setIsBoardExpanded(true);
                   }}
                   className="hop-search-input mono"
                 />
@@ -405,7 +403,7 @@ export default function App() {
               return (
                 <>
                   {/* Desktop Table View */}
-                  <div className="hop-table-container hide-on-mobile">
+                  <div className="hop-table-container">
                     <div className="hop-table-head">
                       <div className="th-loc">CAMPUS FACILITY / CORRIDOR</div>
                       <div className="th-status text-center">CROWD STATUS</div>
@@ -476,55 +474,6 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/*  Mobile Cards View 
-                  <div className="hop-mobile-board-list show-on-mobile">
-                    {displayedBoardRows.map((row) => {
-                      const isPinned = pinnedRows.includes(row.id);
-                      const isCrowded = isRushHour ? row.occ > 50 : row.occ > 80;
-                      const statusLabel = isCrowded ? (row.occ > 85 ? 'FULL' : 'BUSY') : 'CLEAR';
-                      const statusCls = statusLabel === 'FULL' ? 'status-full' : statusLabel === 'BUSY' ? 'status-busy' : 'status-clear';
-                      const occPct = isRushHour ? Math.min(100, row.occ + 8) : Math.max(15, row.occ - 25);
-
-                      return (
-                        <div key={row.id} className="hop-mobile-card">
-                          <div className="hmc-header">
-                            <div className="hmc-loc">
-                              <div className="hmc-title">{row.loc}</div>
-                              <div className="hmc-sub">{row.trend}</div>
-                            </div>
-                            <span className={`hop-status-badge ${statusCls} mono`}>
-                              {statusLabel}
-                            </span>
-                          </div>
-
-                          <div className="hmc-occ-box">
-                            <div className="hop-bar-track">
-                              <div className={`hop-bar-fill ${statusCls}`} style={{ width: `${occPct}%` }} />
-                            </div>
-                            <div className="hmc-occ-labels mono">
-                              <span>{occPct}% Capacity</span>
-                              <span className="text-mint">{row.free}</span>
-                            </div>
-                          </div>
-
-                          <div className="hmc-footer">
-                            <div className="hmc-eta mono">
-                              <Clock size={12} />
-                              <span>{isRushHour ? row.eta : 'No delay'}</span>
-                            </div>
-                            <button 
-                              className={`hop-pin-btn-mobile ${isPinned ? 'is-pinned' : ''}`}
-                              onClick={() => togglePin(row.id)}
-                            >
-                              <Bookmark size={14} />
-                              <span>{isPinned ? 'Saved' : 'Pin'}</span>
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  */}
                   {/* Expand / Collapse Button */}
                   {showExpandButton && (
                     <div style={{ display: 'flex', justifyContent: 'center', padding: '16px 0', borderTop: '1px solid rgba(148,163,184,0.08)' }}>
@@ -544,12 +493,6 @@ export default function App() {
                           fontWeight: 'bold',
                           cursor: 'pointer',
                           transition: 'all 0.25s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'rgba(16,231,157,0.1)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'rgba(2,11,14,0.6)';
                         }}
                       >
                         {isBoardExpanded ? (
@@ -602,22 +545,17 @@ export default function App() {
 
             {/* Left: Live Leaflet Map */}
             <div className="hop-map-panel">
-
-              {/* Map Floating Status Bar */}
               <div className="hop-map-bar">
                 <div className="hop-mb-left">
                   <span className="hop-live-pulse" />
                   <span className="mono">LIVE · SRM KTR CAMPUS</span>
                 </div>
               </div>
-
               <CampusMap />
-
             </div>
 
             {/* Right: Legend & How-it-works Panel */}
             <div className="hop-hud-card-side">
-
               <div className="hop-hcs-header">
                 <span className="hop-hcs-badge">
                   <Radio size={12} />
@@ -654,8 +592,7 @@ export default function App() {
                   <div className="step-title">
                     <strong>How routing works</strong>
                   </div>
-                  <p>Routes are computed live by OSRM's public routing network and drawn as the purple
-                    line, with estimated distance and travel time shown below the map controls.</p>
+                  <p>Routes are computed live by OSRM's public routing network and drawn as the purple line, with estimated distance and travel time shown below the map controls.</p>
                 </div>
               </div>
 
@@ -677,25 +614,17 @@ export default function App() {
       </section>
 
       {/* ============================================================
-          UPCOMING EVENTS RADAR
+          SECTION 4: UPCOMING EVENTS RADAR
           ============================================================ */}
-      <section id="un-events">
-        <HoppinEvents />
-      </section>
+      <HoppinEvents />
 
       {/* ============================================================
-          ON-CAMPUS DINING DIRECTORY 
+          SECTION 5: ON-CAMPUS DINING DIRECTORY 
           ============================================================ */}
-      <section id="un-eateries">
-        <HoppinEateries />
-      </section>
-      {/* SECTION 4.5: UPCOMING EVENTS & RSVP*/}
-      <section id="un-events">
-        <HoppinEvents />
-      </section>
+      <HoppinEateries />
 
       {/* ============================================================
-          SECTION 4: STUDENT SEMESTER TIME-SAVINGS CALCULATOR
+          SECTION 6: STUDENT SEMESTER TIME-SAVINGS CALCULATOR
           ============================================================ */}
       <section className="hop-section hop-calc-section" id="un-calculator">
         <div className="hop-container">
@@ -807,7 +736,7 @@ export default function App() {
       </section>
            
       {/* ============================================================
-          SECTION 6: CAMPUS PARTNERS & ON-ROUTE MONETIZATION
+          SECTION 7: CAMPUS PARTNERS & ON-ROUTE MONETIZATION
           ============================================================ */}
       <section className="hop-section hop-partners-section" id="un-partners">
         <div className="hop-container">
@@ -885,7 +814,7 @@ export default function App() {
       </section>
 
       {/* ============================================================
-          SECTION 7: CAMPUS WAITLIST & AMBASSADOR ONBOARDING
+          SECTION 8: CAMPUS WAITLIST & AMBASSADOR ONBOARDING
           ============================================================ */}
       <section className="hop-section hop-waitlist-section" id="un-waitlist">
         <div className="hop-container">
@@ -978,63 +907,7 @@ export default function App() {
       </section>
 
       {/* ============================================================
-          SECTION 8: FAQ SECTION
-          ============================================================ 
-      <section className="hop-section hop-faq-section" id="un-faq">
-        <div className="hop-container">
-          
-          <div className="hop-section-head">
-            <div className="hop-section-pill">
-              <Info size={13} className="text-mint" />
-              <span>FREQUENTLY ASKED QUESTIONS</span>
-            </div>
-            <h2 className="hop-section-title">Everything you need to know about HOPPIN.</h2>
-          </div>
-
-          <div className="hop-faq-list">
-            {[
-              {
-                q: 'How does HOPPIN calculate crowd density without tracking student phones?',
-                a: 'HOPPIN uses differential signal volume analysis from passive campus Wi-Fi access points and low-energy BLE gateways. No personal device MAC addresses, IP addresses, or student identities are ever inspected, transmitted, or stored on our servers.'
-              },
-              {
-                q: 'Does HOPPIN work inside multistory buildings where GPS fails?',
-                a: 'Yes. Standard satellite GPS cannot penetrate thick reinforced concrete. HOPPIN employs dead-reckoning sensor fusion, indoor Bluetooth micro-beacons, and 3D floor geometry to guide students through stairs, connecting skywalks, and corridors seamlessly.'
-              },
-              {
-                q: 'Is HOPPIN really 100% free for college students?',
-                a: '100% free forever for students. We monetize ethically by collaborating with approved campus food kiosks, bookstores, and print shops for zero-detour grab-and-go recommendations right along your existing walking path.'
-              },
-              {
-                q: 'Can our college administration deploy HOPPIN on our campus?',
-                a: 'Yes. Our university deployment team imports campus CAD / GIS geometry, connects with existing Wi-Fi infrastructure, and synchronizes lecture timetables in under 48 hours.'
-              }
-            ].map((faq, fIdx) => (
-              <div 
-                key={fIdx} 
-                className={`hop-faq-card ${openFaqIdx === fIdx ? 'is-open' : ''}`}
-                onClick={() => setOpenFaqIdx(openFaqIdx === fIdx ? -1 : fIdx)}
-              >
-                <div className="hfc-question">
-                  <h4>{faq.q}</h4>
-                  <span className="hfc-chevron">
-                    {openFaqIdx === fIdx ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-                  </span>
-                </div>
-                {openFaqIdx === fIdx && (
-                  <div className="hfc-answer">
-                    <p>{faq.a}</p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </section>
-*/}
-      {/* ============================================================
-          SECTION: GEN-Z USER FEEDBACK & VIBE CHECK
+          SECTION 9: GEN-Z USER FEEDBACK & VIBE CHECK
           ============================================================ */}
       <section className="hop-section hop-feedback-section" id="un-feedback">
         <div className="hop-container">
@@ -1136,6 +1009,7 @@ export default function App() {
           </div>
         </div>
       </section>
+
       <Footer />
     </div>
   );
@@ -1144,8 +1018,7 @@ export default function App() {
 /* ============================================================
    HOPPIN EVENTS — INTERACTIVE EVENT RADAR
    ============================================================ */
-
-export function HoppinEvents() {
+function HoppinEvents() {
   const [events, setEvents] = useState([
     {
       id: 'e1',
@@ -1228,9 +1101,7 @@ export function HoppinEvents() {
   const [activeFilter, setActiveFilter] = useState('ALL');
   const [searchEvent, setSearchEvent] = useState('');
   const [expandedEvent, setExpandedEvent] = useState(null);
-  const [showReminders, setShowReminders] = useState(false);
 
-  /* RSVP / Reminder toggle */
   const toggleRSVP = (id) => {
     setEvents((prev) =>
       prev.map((event) =>
@@ -1241,7 +1112,6 @@ export function HoppinEvents() {
     );
   };
 
-  /* Filter + Search */
   const visibleEvents = events.filter((event) => {
     const matchesFilter =
       activeFilter === 'ALL'
@@ -1251,7 +1121,6 @@ export function HoppinEvents() {
         : event.category.toUpperCase() === activeFilter;
 
     const search = searchEvent.toLowerCase();
-
     const matchesSearch =
       event.title.toLowerCase().includes(search) ||
       event.location.toLowerCase().includes(search) ||
@@ -1265,7 +1134,7 @@ export function HoppinEvents() {
   return (
     <section
       className="hop-section hop-events-section"
-      id="hoppin-events"
+      id="un-events"
       style={{
         background:
           'radial-gradient(circle at 85% 10%, rgba(16,231,157,0.07), transparent 28%), #02090d',
@@ -1273,13 +1142,7 @@ export function HoppinEvents() {
       }}
     >
       <div className="hop-container">
-
-        {/* =====================================================
-            HEADER
-            ===================================================== */}
-
         <div className="hop-section-head">
-
           <div
             className="hop-section-pill"
             style={{
@@ -1298,29 +1161,18 @@ export function HoppinEvents() {
                 animation: 'pulse 1.5s infinite'
               }}
             />
-
             <span>LIVE CAMPUS EVENT RADAR</span>
           </div>
 
           <h2 className="hop-section-title">
             Never miss what's happening at{' '}
-            <span className="hop-text-gradient">
-              SRM KTR.
-            </span>
+            <span className="hop-text-gradient">SRM KTR.</span>
           </h2>
 
           <p className="hop-section-desc">
-            Discover upcoming fests, hackathons, seminars and club
-            activities — while HOPPIN monitors crowd levels and
-            recommends smarter routes around busy venues.
+            Discover upcoming fests, hackathons, seminars and club activities — while HOPPIN monitors crowd levels and recommends smarter routes around busy venues.
           </p>
-
         </div>
-
-
-        {/* =====================================================
-            EVENT COMMAND BAR
-            ===================================================== */}
 
         <div
           style={{
@@ -1337,17 +1189,7 @@ export function HoppinEvents() {
             backdropFilter: 'blur(12px)'
           }}
         >
-
-          {/* Filters */}
-
-          <div
-            style={{
-              display: 'flex',
-              gap: '8px',
-              flexWrap: 'wrap'
-            }}
-          >
-
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {[
               ['ALL', 'All Events'],
               ['FEST', 'Fests'],
@@ -1356,26 +1198,13 @@ export function HoppinEvents() {
               ['SEMINAR', 'Seminars'],
               ['REMINDERS', `My Reminders (${reminderCount})`]
             ].map(([value, label]) => (
-
               <button
                 key={value}
                 onClick={() => setActiveFilter(value)}
                 style={{
-                  border:
-                    activeFilter === value
-                      ? '1px solid #10E79D'
-                      : '1px solid rgba(148,163,184,0.15)',
-
-                  background:
-                    activeFilter === value
-                      ? 'rgba(16,231,157,0.12)'
-                      : 'rgba(2,11,14,0.7)',
-
-                  color:
-                    activeFilter === value
-                      ? '#10E79D'
-                      : '#94A3B8',
-
+                  border: activeFilter === value ? '1px solid #10E79D' : '1px solid rgba(148,163,184,0.15)',
+                  background: activeFilter === value ? 'rgba(16,231,157,0.12)' : 'rgba(2,11,14,0.7)',
+                  color: activeFilter === value ? '#10E79D' : '#94A3B8',
                   padding: '9px 14px',
                   borderRadius: '999px',
                   fontSize: '11px',
@@ -1388,22 +1217,10 @@ export function HoppinEvents() {
               >
                 {label}
               </button>
-
             ))}
-
           </div>
 
-
-          {/* Search */}
-
-          <div
-            style={{
-              position: 'relative',
-              minWidth: '220px',
-              flex: '0 1 280px'
-            }}
-          >
-
+          <div style={{ position: 'relative', minWidth: '220px', flex: '0 1 280px' }}>
             <Search
               size={15}
               style={{
@@ -1414,7 +1231,6 @@ export function HoppinEvents() {
                 color: '#64748B'
               }}
             />
-
             <input
               type="text"
               placeholder="Search events..."
@@ -1433,27 +1249,17 @@ export function HoppinEvents() {
                 fontSize: '11px'
               }}
             />
-
           </div>
-
         </div>
-
-
-        {/* =====================================================
-            EVENT GRID
-            ===================================================== */}
 
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns:
-              'repeat(auto-fit, minmax(280px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
             gap: '18px'
           }}
         >
-
           {visibleEvents.length === 0 ? (
-
             <div
               style={{
                 gridColumn: '1 / -1',
@@ -1464,119 +1270,31 @@ export function HoppinEvents() {
                 borderRadius: '20px'
               }}
             >
-              <CalendarDays
-                size={30}
-                style={{
-                  color: '#475569',
-                  marginBottom: '12px'
-                }}
-              />
-
-              <h3
-                style={{
-                  color: '#CBD5E1',
-                  margin: '0 0 6px'
-                }}
-              >
-                No events found
-              </h3>
-
-              <p
-                style={{
-                  color: '#64748B',
-                  fontSize: '13px',
-                  margin: 0
-                }}
-              >
-                Try another category or search term.
-              </p>
-
+              <CalendarDays size={30} style={{ color: '#475569', marginBottom: '12px' }} />
+              <h3 style={{ color: '#CBD5E1', margin: '0 0 6px' }}>No events found</h3>
+              <p style={{ color: '#64748B', fontSize: '13px', margin: 0 }}>Try another category or search term.</p>
             </div>
-
           ) : (
-
             visibleEvents.map((event) => {
-
               const isExpanded = expandedEvent === event.id;
-
               const capacityColor =
-                event.capacity >= 80
-                  ? '#EF4444'
-                  : event.capacity >= 60
-                  ? '#F59E0B'
-                  : '#10E79D';
+                event.capacity >= 80 ? '#EF4444' : event.capacity >= 60 ? '#F59E0B' : '#10E79D';
 
               return (
-
                 <div
                   key={event.id}
                   style={{
-                    background:
-                      'linear-gradient(145deg, rgba(8,17,23,0.98), rgba(2,11,14,0.98))',
-                    border: event.isRSVP
-                      ? '1px solid rgba(16,231,157,0.45)'
-                      : '1px solid rgba(148,163,184,0.12)',
+                    background: 'linear-gradient(145deg, rgba(8,17,23,0.98), rgba(2,11,14,0.98))',
+                    border: event.isRSVP ? '1px solid rgba(16,231,157,0.45)' : '1px solid rgba(148,163,184,0.12)',
                     borderRadius: '20px',
                     padding: '22px',
                     position: 'relative',
                     overflow: 'hidden',
-                    transition:
-                      'transform 0.25s ease, border 0.25s ease, box-shadow 0.25s ease',
-                    boxShadow: event.isRSVP
-                      ? '0 0 25px rgba(16,231,157,0.08)'
-                      : 'none'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform =
-                      'translateY(-5px)';
-                    e.currentTarget.style.borderColor =
-                      'rgba(16,231,157,0.45)';
-                    e.currentTarget.style.boxShadow =
-                      '0 15px 35px rgba(0,0,0,0.3)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform =
-                      'translateY(0)';
-                    e.currentTarget.style.borderColor =
-                      event.isRSVP
-                        ? 'rgba(16,231,157,0.45)'
-                        : 'rgba(148,163,184,0.12)';
-                    e.currentTarget.style.boxShadow =
-                      event.isRSVP
-                        ? '0 0 25px rgba(16,231,157,0.08)'
-                        : 'none';
+                    transition: 'transform 0.25s ease, border 0.25s ease, box-shadow 0.25s ease',
+                    boxShadow: event.isRSVP ? '0 0 25px rgba(16,231,157,0.08)' : 'none'
                   }}
                 >
-
-                  {/* Decorative glow */}
-
-                  <div
-                    style={{
-                      position: 'absolute',
-                      width: '130px',
-                      height: '130px',
-                      borderRadius: '50%',
-                      background:
-                        'rgba(16,231,157,0.04)',
-                      filter: 'blur(35px)',
-                      top: '-60px',
-                      right: '-40px',
-                      pointerEvents: 'none'
-                    }}
-                  />
-
-
-                  {/* Event Code */}
-
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: '16px'
-                    }}
-                  >
-
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                     <span
                       style={{
                         color: '#10E79D',
@@ -1593,214 +1311,61 @@ export function HoppinEvents() {
                     </span>
 
                     {event.isRSVP && (
-                      <span
-                        style={{
-                          color: '#10E79D',
-                          fontSize: '9px',
-                          fontFamily: 'monospace'
-                        }}
-                      >
+                      <span style={{ color: '#10E79D', fontSize: '9px', fontFamily: 'monospace' }}>
                         ● SAVED
                       </span>
                     )}
-
                   </div>
 
-
-                  {/* Title */}
-
-                  <h3
-                    style={{
-                      color: '#F8FAFC',
-                      fontSize: '19px',
-                      margin: '0 0 10px',
-                      lineHeight: 1.25
-                    }}
-                  >
+                  <h3 style={{ color: '#F8FAFC', fontSize: '19px', margin: '0 0 10px', lineHeight: 1.25 }}>
                     {event.title}
                   </h3>
 
-
-                  {/* Date */}
-
-                  <div
-                    style={{
-                      display: 'flex',
-                      gap: '8px',
-                      alignItems: 'center',
-                      color: '#38BDF8',
-                      fontSize: '11px',
-                      fontFamily: 'monospace',
-                      marginBottom: '8px'
-                    }}
-                  >
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', color: '#38BDF8', fontSize: '11px', fontFamily: 'monospace', marginBottom: '8px' }}>
                     <Clock size={13} />
                     {event.date} · {event.time}
                   </div>
 
-
-                  {/* Location */}
-
-                  <div
-                    style={{
-                      display: 'flex',
-                      gap: '8px',
-                      alignItems: 'center',
-                      color: '#94A3B8',
-                      fontSize: '11px',
-                      marginBottom: '16px'
-                    }}
-                  >
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', color: '#94A3B8', fontSize: '11px', marginBottom: '16px' }}>
                     <MapPin size={13} />
                     {event.location}
                   </div>
 
-
-                  {/* Description */}
-
-                  <p
-                    style={{
-                      color: '#94A3B8',
-                      fontSize: '12px',
-                      lineHeight: 1.7,
-                      margin: '0 0 18px'
-                    }}
-                  >
+                  <p style={{ color: '#94A3B8', fontSize: '12px', lineHeight: 1.7, margin: '0 0 18px' }}>
                     {event.desc}
                   </p>
 
-
-                  {/* Crowd Meter */}
-
-                  <div
-                    style={{
-                      background: '#020B0E',
-                      border:
-                        '1px solid rgba(148,163,184,0.1)',
-                      borderRadius: '12px',
-                      padding: '12px',
-                      marginBottom: '16px'
-                    }}
-                  >
-
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        marginBottom: '8px',
-                        fontFamily: 'monospace',
-                        fontSize: '9px'
-                      }}
-                    >
-
-                      <span style={{ color: '#64748B' }}>
-                        EXPECTED CROWD
-                      </span>
-
-                      <span style={{ color: capacityColor }}>
-                        {event.expected} · {event.capacity}%
-                      </span>
-
+                  <div style={{ background: '#020B0E', border: '1px solid rgba(148,163,184,0.1)', borderRadius: '12px', padding: '12px', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontFamily: 'monospace', fontSize: '9px' }}>
+                      <span style={{ color: '#64748B' }}>EXPECTED CROWD</span>
+                      <span style={{ color: capacityColor }}>{event.expected} · {event.capacity}%</span>
                     </div>
-
-                    <div
-                      style={{
-                        height: '5px',
-                        background: '#17232A',
-                        borderRadius: '99px',
-                        overflow: 'hidden'
-                      }}
-                    >
-
-                      <div
-                        style={{
-                          width: `${event.capacity}%`,
-                          height: '100%',
-                          background: capacityColor,
-                          borderRadius: '99px',
-                          boxShadow: `0 0 10px ${capacityColor}`
-                        }}
-                      />
-
+                    <div style={{ height: '5px', background: '#17232A', borderRadius: '99px', overflow: 'hidden' }}>
+                      <div style={{ width: `${event.capacity}%`, height: '100%', background: capacityColor, borderRadius: '99px', boxShadow: `0 0 10px ${capacityColor}` }} />
                     </div>
-
                   </div>
 
-
-                  {/* Expanded Details */}
-
                   {isExpanded && (
-
-                    <div
-                      style={{
-                        borderTop:
-                          '1px solid rgba(148,163,184,0.1)',
-                        paddingTop: '15px',
-                        marginBottom: '15px'
-                      }}
-                    >
-
-                      <div
-                        style={{
-                          color: '#64748B',
-                          fontFamily: 'monospace',
-                          fontSize: '9px',
-                          marginBottom: '10px'
-                        }}
-                      >
+                    <div style={{ borderTop: '1px solid rgba(148,163,184,0.1)', paddingTop: '15px', marginBottom: '15px' }}>
+                      <div style={{ color: '#64748B', fontFamily: 'monospace', fontSize: '9px', marginBottom: '10px' }}>
                         HOPPIN EVENT INTELLIGENCE
                       </div>
-
                       {event.specs.map((spec, index) => (
-
-                        <div
-                          key={index}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            color: '#CBD5E1',
-                            fontSize: '11px',
-                            marginBottom: '7px'
-                          }}
-                        >
-                          <CheckCircle2
-                            size={12}
-                            color="#10E79D"
-                          />
-
+                        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#CBD5E1', fontSize: '11px', marginBottom: '7px' }}>
+                          <CheckCircle2 size={12} color="#10E79D" />
                           {spec}
                         </div>
-
                       ))}
-
                     </div>
-
                   )}
 
-
-                  {/* Actions */}
-
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr auto',
-                      gap: '8px'
-                    }}
-                  >
-
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '8px' }}>
                     <button
                       onClick={() => toggleRSVP(event.id)}
                       style={{
-                        border: event.isRSVP
-                          ? '1px solid rgba(16,231,157,0.6)'
-                          : '1px solid rgba(148,163,184,0.2)',
-                        background: event.isRSVP
-                          ? 'rgba(16,231,157,0.12)'
-                          : 'rgba(255,255,255,0.03)',
-                        color: event.isRSVP
-                          ? '#10E79D'
-                          : '#CBD5E1',
+                        border: event.isRSVP ? '1px solid rgba(16,231,157,0.6)' : '1px solid rgba(148,163,184,0.2)',
+                        background: event.isRSVP ? 'rgba(16,231,157,0.12)' : 'rgba(255,255,255,0.03)',
+                        color: event.isRSVP ? '#10E79D' : '#CBD5E1',
                         padding: '11px',
                         borderRadius: '10px',
                         cursor: 'pointer',
@@ -1810,30 +1375,15 @@ export function HoppinEvents() {
                         transition: 'all 0.2s ease'
                       }}
                     >
-                      <Bell
-                        size={13}
-                        style={{
-                          verticalAlign: 'middle',
-                          marginRight: '6px'
-                        }}
-                      />
-
-                      {event.isRSVP
-                        ? 'REMINDER ACTIVE'
-                        : 'SET REMINDER'}
+                      <Bell size={13} style={{ verticalAlign: 'middle', marginRight: '6px' }} />
+                      {event.isRSVP ? 'REMINDER ACTIVE' : 'SET REMINDER'}
                     </button>
 
-
                     <button
-                      onClick={() =>
-                        setExpandedEvent(
-                          isExpanded ? null : event.id
-                        )
-                      }
+                      onClick={() => setExpandedEvent(isExpanded ? null : event.id)}
                       style={{
                         width: '44px',
-                        border:
-                          '1px solid rgba(148,163,184,0.2)',
+                        border: '1px solid rgba(148,163,184,0.2)',
                         background: 'rgba(255,255,255,0.03)',
                         color: '#94A3B8',
                         borderRadius: '10px',
@@ -1845,81 +1395,23 @@ export function HoppinEvents() {
                       }}
                       title="View event details"
                     >
-                      {isExpanded ? (
-                        <ChevronDown size={16} />
-                      ) : (
-                        <ChevronRight size={16} />
-                      )}
+                      {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                     </button>
-
                   </div>
-
                 </div>
-
               );
             })
-
           )}
-
         </div>
-
-
-        {/* =====================================================
-            FOOTER STATUS
-            ===================================================== */}
-
-        <div
-          style={{
-            marginTop: '22px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '10px',
-            padding: '13px 16px',
-            background: 'rgba(8,17,23,0.65)',
-            border:
-              '1px solid rgba(148,163,184,0.1)',
-            borderRadius: '12px',
-            fontFamily: 'monospace',
-            fontSize: '9px',
-            color: '#64748B'
-          }}
-        >
-
-          <span>
-            <span
-              style={{
-                color: '#10E79D',
-                marginRight: '6px'
-              }}
-            >
-              ●
-            </span>
-
-            EVENT RADAR ONLINE
-          </span>
-
-          <span>
-            {events.length} CAMPUS EVENTS INDEXED
-          </span>
-
-          <span>
-            CROWD DATA SYNC · EVERY 20 SEC
-          </span>
-
-        </div>
-
       </div>
     </section>
   );
 }
 
-
 /* ============================================================
-   HOPPIN EATERIES — ON-CAMPUS DINING DIRECTORY WITH EXPAND TOGGLE
+   HOPPIN EATERIES — ON-CAMPUS DINING DIRECTORY
    ============================================================ */
-
-export function HoppinEateries() {
+function HoppinEateries() {
   const [eateries, setEateries] = useState([
     { id: 'et1', name: "Goldie's Grill and Shawarma", location: "UB Ground Floor", zone: "UB", contact: "9884562815", type: "Grill & Fast Food", isSaved: false },
     { id: 'et2', name: "Seema's Cafe", location: "UB First Floor", zone: "UB", contact: "9940304021", type: "Cafe & Snacks", isSaved: false },
@@ -1942,11 +1434,8 @@ export function HoppinEateries() {
 
   const [activeZone, setActiveZone] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // NEW STATE: Tracks if the list is expanded or collapsed
   const [isExpanded, setIsExpanded] = useState(false);
 
-  /* Save / Bookmark Toggle */
   const toggleSaveEatery = (id) => {
     setEateries((prev) =>
       prev.map((item) =>
@@ -1971,8 +1460,6 @@ export function HoppinEateries() {
   });
 
   const savedCount = eateries.filter((item) => item.isSaved).length;
-
-  // LOGIC: Show only 3 items initially (one row), or all if expanded
   const INITIAL_ROW_COUNT = 3; 
   const displayedEateries = isExpanded ? filteredEateries : filteredEateries.slice(0, INITIAL_ROW_COUNT);
   const showExpandButton = filteredEateries.length > INITIAL_ROW_COUNT;
@@ -1988,7 +1475,6 @@ export function HoppinEateries() {
     >
       <div className="hop-container">
         
-        {/* Section Header */}
         <div className="hop-section-head">
           <div className="hop-section-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10E79D', boxShadow: '0 0 12px #10E79D', animation: 'pulse 1.5s infinite' }} />
@@ -2002,7 +1488,6 @@ export function HoppinEateries() {
           </p>
         </div>
 
-        {/* Command Bar / Filter Tabs */}
         <div style={{
           background: 'rgba(8,17,23,0.9)',
           border: '1px solid rgba(148,163,184,0.12)',
@@ -2030,7 +1515,7 @@ export function HoppinEateries() {
                 key={val}
                 onClick={() => {
                   setActiveZone(val);
-                  setIsExpanded(false); // Reset to collapsed when changing tabs
+                  setIsExpanded(false);
                 }}
                 style={{
                   border: activeZone === val ? '1px solid #10E79D' : '1px solid rgba(148,163,184,0.15)',
@@ -2058,7 +1543,7 @@ export function HoppinEateries() {
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
-                setIsExpanded(true); // Auto-expand when user searches so they see all results
+                setIsExpanded(true);
               }}
               style={{
                 width: '100%',
@@ -2076,7 +1561,6 @@ export function HoppinEateries() {
           </div>
         </div>
 
-        {/* Eateries Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '18px' }}>
           {displayedEateries.length === 0 ? (
             <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '60px 20px', background: '#081117', border: '1px solid rgba(148,163,184,0.12)', borderRadius: '20px' }}>
@@ -2144,7 +1628,6 @@ export function HoppinEateries() {
                   <span style={{ color: '#CBD5E1' }}>{item.contact}</span>
                 </div>
 
-                {/* Save / Bookmark Button */}
                 <button
                   onClick={() => toggleSaveEatery(item.id)}
                   style={{
@@ -2174,7 +1657,6 @@ export function HoppinEateries() {
           )}
         </div>
 
-        {/* Expand / Collapse Button */}
         {showExpandButton && (
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '32px' }}>
             <button
@@ -2194,14 +1676,6 @@ export function HoppinEateries() {
                 cursor: 'pointer',
                 transition: 'all 0.25s ease',
                 boxShadow: '0 0 15px rgba(16,231,157,0.05)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(16,231,157,0.1)';
-                e.currentTarget.style.boxShadow = '0 0 20px rgba(16,231,157,0.15)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(2,11,14,0.8)';
-                e.currentTarget.style.boxShadow = '0 0 15px rgba(16,231,157,0.05)';
               }}
             >
               {isExpanded ? (

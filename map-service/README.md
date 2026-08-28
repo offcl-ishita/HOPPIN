@@ -17,8 +17,10 @@ map-service/
     crud.py            SQL queries / GeoJSON building / route matching
     schemas.py         Pydantic request/response models
   sql/
-    schema.sql         PostGIS table definitions
-    seed.sql           Sample campus locations, crowd readings, paths
+    schema.sql              PostGIS table definitions
+    seed.sql                Sample campus locations, crowd readings, paths -- run ONCE
+    seed_activity_data.sql  Demo crowd/issue/blockage activity -- re-runnable, run before each demo
+    reseed_demo.sh          Wrapper: psql "$DATABASE_URL" -f seed_activity_data.sql
   frontend/
     index.html         Leaflet map, single file, no build step
   requirements.txt
@@ -47,7 +49,24 @@ routing) decides what `/locations`, `/route`, etc. do.
    psql "$DATABASE_URL" -f sql/schema.sql
    psql "$DATABASE_URL" -f sql/seed.sql
    ```
-4. Get your **pooled** connection string: Project Settings -> Database ->
+
+   `seed.sql` has no delete-first logic -- it's meant to run **once**.
+   Running it again duplicates every location and path.
+4. Before demoing, seed some live-looking activity (crowd readings,
+   issue reports, blockages) with `sql/seed_activity_data.sql` -- unlike
+   `seed.sql`, this one clears and reseeds itself every time, so it's
+   safe (expected, even) to re-run right before each demo:
+
+   ```bash
+   psql "$DATABASE_URL" -f sql/seed_activity_data.sql
+   # or: sql/reseed_demo.sh   (needs DATABASE_URL exported first)
+   ```
+
+   Timing matters here: `GET /locations`' crowd-density aggregation only
+   counts readings from the last 10 minutes (see "How crowd density
+   aggregates" below), so re-run this shortly before you actually show
+   the map, not hours ahead.
+5. Get your **pooled** connection string: Project Settings -> Database ->
    Connection string -> **Transaction** mode (port 6543). Use this, not the
    direct connection, for `DATABASE_URL` — see `.env.example` for why.
 

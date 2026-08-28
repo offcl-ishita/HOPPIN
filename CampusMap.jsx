@@ -144,9 +144,19 @@ function colorForDensity(density) {
   return '#10E79D'; // mint
 }
 
-// Same palette as colorForDensity, as gradient stops for leaflet.heat
-// (0-1 ratio -> color). Low ~0.3, moderate ~0.6, high ~1.0.
-const HEAT_GRADIENT = { 0.0: '#10E79D', 0.3: '#10E79D', 0.6: '#F59E0B', 1.0: '#EF4444' };
+// Gradient stops for leaflet.heat (0-1 intensity ratio -> color). Widened
+// on purpose so mid-range intensity doesn't default to amber/red: only
+// genuinely high density (>0.7, matching very_crowded reports) reads as
+// red. 0.0-0.2 fades in from fully transparent (no/negligible signal) so
+// empty campus stays empty, not tinted -- see colorForDensity for the
+// equivalent non-heatmap (marker) palette.
+const HEAT_GRADIENT = {
+  0.0: 'rgba(16, 231, 157, 0)',
+  0.2: 'rgba(16, 231, 157, 0.35)',
+  0.4: '#10E79D',
+  0.7: '#F59E0B',
+  1.0: '#EF4444',
+};
 
 // Real crowd_density source: each GeoJSON feature from /locations already
 // carries { density_percent, status_label } (see loadLocations() below) --
@@ -162,47 +172,6 @@ function featuresToHeatPoints(features) {
       return [lat, lng, f.properties.density_percent / 100];
     });
 }
-
-// ---------------------------------------------------------------------------
-// Ambient grid: SYNTHETIC coverage, not real data. Explicitly requested so
-// the heatmap reads as continuous campus-wide coverage instead of isolated
-// dots at the six reporting venues -- every point here is invented, not a
-// report or a sensor reading. Deliberately scoped to the heat layer only:
-// /locations, the circle markers, and their popups are untouched and keep
-// showing honest null / "No live reading yet" for any venue with no real
-// report. If this ever needs to be told apart from real data again later,
-// this block (and only this block) is where to look.
-//
-// Intensity is kept low and grid spacing wide enough that overlapping grid
-// points don't accumulate into a false "moderate/crowded" color -- leaflet.
-// heat sums overlapping points' intensity, so a denser grid or higher
-// baseline here can visually drift toward amber/red with no real report
-// behind it. Tuned conservatively; turn AMBIENT_BASELINE_INTENSITY down
-// further if it ever looks too warm in an empty area.
-// ---------------------------------------------------------------------------
-const AMBIENT_GRID_SPACING_METERS = 45;
-const AMBIENT_BASELINE_INTENSITY = 0.06;
-
-function generateAmbientGrid(bounds) {
-  const [[southLat, westLng], [northLat, eastLng]] = bounds;
-  const metersPerDegreeLat = 111320;
-  const metersPerDegreeLng = 111320 * Math.cos((southLat * Math.PI) / 180);
-  const latStep = AMBIENT_GRID_SPACING_METERS / metersPerDegreeLat;
-  const lngStep = AMBIENT_GRID_SPACING_METERS / metersPerDegreeLng;
-
-  const points = [];
-  for (let lat = southLat; lat <= northLat; lat += latStep) {
-    for (let lng = westLng; lng <= eastLng; lng += lngStep) {
-      points.push([lat, lng, AMBIENT_BASELINE_INTENSITY]);
-    }
-  }
-  return points;
-}
-
-// Computed once -- the grid itself is static, only the real points change
-// per poll (see the heatmap-updating effect below, which concatenates the
-// two every time).
-const AMBIENT_GRID_POINTS = generateAmbientGrid(CAMPUS_BOUNDS);
 
 function geolocationErrorMessage(err) {
   switch (err.code) {
@@ -281,17 +250,19 @@ export default function CampusMap() {
     map.getPane('heatPane').style.zIndex = 350;
     map.getPane('heatPane').style.pointerEvents = 'none';
 
-    // radius/blur widened (from 35/25) so the ambient grid points (see
-    // generateAmbientGrid above) overlap into a continuous-looking surface
-    // instead of a visible dot pattern, at the zoom level this map opens
-    // at (16-17).
+    // Tight radius/blur and a low minOpacity on purpose -- this only ever
+    // renders real POI reports now (no ambient/synthetic points, removed:
+    // they were summing under leaflet.heat's additive blending into a
+    // solid red wash across the whole campus with zero real data behind
+    // it). Each report should read as one distinct, localized area, not
+    // bleed into neighboring POIs or tint empty ground.
     heatLayerRef.current = L.heatLayer([], {
       pane: 'heatPane',
-      radius: 55,
-      blur: 40,
+      radius: 28,
+      blur: 18,
       maxZoom: 19,
       max: 1.0,
-      minOpacity: 0.35,
+      minOpacity: 0.08,
       gradient: HEAT_GRADIENT,
     }).addTo(map);
 
@@ -482,9 +453,7 @@ export default function CampusMap() {
   // state loadLocations() already refreshes every 12s above, so the
   // heatmap already updates live on that cadence for free.
   useEffect(() => {
-    // Ambient grid first, real points last -- real reports should be what
-    // stands out, not get buried under synthetic coverage.
-    updateHeatmap([...AMBIENT_GRID_POINTS, ...featuresToHeatPoints(features)]);
+    updateHeatmap(featuresToHeatPoints(features));
 
     const tooltipLayer = heatTooltipLayerRef.current;
     if (!tooltipLayer) return;

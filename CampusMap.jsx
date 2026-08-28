@@ -88,15 +88,20 @@ async function getRouteGeometry({ startLng, startLat, endLng, endLat, accessible
   return { ...candidates[0], blocked: true, avoidedCount: 0 };
 }
 
-const CAMPUS_CENTER = [12.8231, 80.0444]; // SRM KTR, approximate
+const CAMPUS_CENTER = [12.822974, 80.036599]; // recentered on the widened bounds below
 
-// Generous box around the seeded campus locations (roughly 2km x 2km),
-// padded beyond the six named venues to leave room for connecting paths
-// and future locations. Placeholder like CAMPUS_CENTER -- tighten to the
-// real campus boundary once you have it.
+// Widened to contain all 71 seeded locations, including the hostel-zone and
+// lab-block clusters computed via ST_Project from the real University
+// Building anchor (see map-service/sql/update_coordinates_full.sql) -- those
+// sit up to ~2km SW/W of UB, well outside the old tighter box, and Leaflet's
+// maxBounds would otherwise make them unreachable/unpannable-to on the live
+// map. Computed as the real min/max lat/lng across all 71 locations + 150m
+// padding, not a round-number guess. Still placeholder-ish like
+// CAMPUS_CENTER -- tighten to the real campus boundary once more locations
+// have surveyed (not estimated) coordinates.
 const CAMPUS_BOUNDS = [
-  [12.815, 80.035], // southwest
-  [12.833, 80.054], // northeast
+  [12.808835, 80.022616], // southwest
+  [12.837113, 80.050582], // northeast
 ];
 
 // Display labels for locations.category (see schema.sql's CHECK constraint

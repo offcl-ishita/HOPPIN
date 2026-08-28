@@ -125,6 +125,47 @@ function featuresToHeatPoints(features) {
     });
 }
 
+// ---------------------------------------------------------------------------
+// Ambient grid: SYNTHETIC coverage, not real data. Explicitly requested so
+// the heatmap reads as continuous campus-wide coverage instead of isolated
+// dots at the six reporting venues -- every point here is invented, not a
+// report or a sensor reading. Deliberately scoped to the heat layer only:
+// /locations, the circle markers, and their popups are untouched and keep
+// showing honest null / "No live reading yet" for any venue with no real
+// report. If this ever needs to be told apart from real data again later,
+// this block (and only this block) is where to look.
+//
+// Intensity is kept low and grid spacing wide enough that overlapping grid
+// points don't accumulate into a false "moderate/crowded" color -- leaflet.
+// heat sums overlapping points' intensity, so a denser grid or higher
+// baseline here can visually drift toward amber/red with no real report
+// behind it. Tuned conservatively; turn AMBIENT_BASELINE_INTENSITY down
+// further if it ever looks too warm in an empty area.
+// ---------------------------------------------------------------------------
+const AMBIENT_GRID_SPACING_METERS = 45;
+const AMBIENT_BASELINE_INTENSITY = 0.06;
+
+function generateAmbientGrid(bounds) {
+  const [[southLat, westLng], [northLat, eastLng]] = bounds;
+  const metersPerDegreeLat = 111320;
+  const metersPerDegreeLng = 111320 * Math.cos((southLat * Math.PI) / 180);
+  const latStep = AMBIENT_GRID_SPACING_METERS / metersPerDegreeLat;
+  const lngStep = AMBIENT_GRID_SPACING_METERS / metersPerDegreeLng;
+
+  const points = [];
+  for (let lat = southLat; lat <= northLat; lat += latStep) {
+    for (let lng = westLng; lng <= eastLng; lng += lngStep) {
+      points.push([lat, lng, AMBIENT_BASELINE_INTENSITY]);
+    }
+  }
+  return points;
+}
+
+// Computed once -- the grid itself is static, only the real points change
+// per poll (see the heatmap-updating effect below, which concatenates the
+// two every time).
+const AMBIENT_GRID_POINTS = generateAmbientGrid(CAMPUS_BOUNDS);
+
 function geolocationErrorMessage(err) {
   switch (err.code) {
     case err.PERMISSION_DENIED:
@@ -200,10 +241,14 @@ export default function CampusMap() {
     map.getPane('heatPane').style.zIndex = 350;
     map.getPane('heatPane').style.pointerEvents = 'none';
 
+    // radius/blur widened (from 35/25) so the ambient grid points (see
+    // generateAmbientGrid above) overlap into a continuous-looking surface
+    // instead of a visible dot pattern, at the zoom level this map opens
+    // at (16-17).
     heatLayerRef.current = L.heatLayer([], {
       pane: 'heatPane',
-      radius: 35,
-      blur: 25,
+      radius: 55,
+      blur: 40,
       maxZoom: 19,
       max: 1.0,
       minOpacity: 0.35,
@@ -328,7 +373,7 @@ export default function CampusMap() {
 
   useEffect(() => {
     loadLocations();
-    const interval = setInterval(loadLocations, 20000); // live-ish refresh
+    const interval = setInterval(loadLocations, 12000); // live-ish refresh (was 20s)
     return () => clearInterval(interval);
   }, [loadLocations]);
 
@@ -382,7 +427,7 @@ export default function CampusMap() {
   // and pushes them onto the existing heat layer. Kept separate from the
   // features-fetching logic above so the exact same function can later be
   // called from a faster-cadence source (a polling interval shorter than
-  // loadLocations' 20s, or a websocket message handler) without touching
+  // loadLocations' 12s, or a websocket message handler) without touching
   // anything else here -- just call updateHeatmap(freshPoints) from there.
   const updateHeatmap = useCallback((newPoints) => {
     if (heatLayerRef.current) {
@@ -392,11 +437,14 @@ export default function CampusMap() {
 
   // TODO: hook a real live feed in here (websocket onmessage, or a second
   // faster setInterval) calling updateHeatmap(freshPoints) directly. Not
-  // built yet -- for now this effect is the only caller, riding on the
-  // same `features` state loadLocations() already refreshes every 20s
-  // above, so the heatmap already updates live on that cadence for free.
+  // built yet (there is no websocket anywhere in this codebase, checked) --
+  // for now this effect is the only caller, riding on the same `features`
+  // state loadLocations() already refreshes every 12s above, so the
+  // heatmap already updates live on that cadence for free.
   useEffect(() => {
-    updateHeatmap(featuresToHeatPoints(features));
+    // Ambient grid first, real points last -- real reports should be what
+    // stands out, not get buried under synthetic coverage.
+    updateHeatmap([...AMBIENT_GRID_POINTS, ...featuresToHeatPoints(features)]);
 
     const tooltipLayer = heatTooltipLayerRef.current;
     if (!tooltipLayer) return;

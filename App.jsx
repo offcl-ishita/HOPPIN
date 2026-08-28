@@ -1139,14 +1139,13 @@ export default function App() {
       <Footer />
     </div>
   );
+}
 
-
-      {/* --- HOPPIN EVENTS COMPONENT --- */}
-  {/* ============================================================
+/* ============================================================
    HOPPIN EVENTS — INTERACTIVE EVENT RADAR
-   ============================================================ */}
+   ============================================================ */
 
-function HoppinEvents() {
+export function HoppinEvents() {
   const [events, setEvents] = useState([
     {
       id: 'e1',

@@ -1142,11 +1142,11 @@ export default function App() {
 
 
       {/* --- HOPPIN EVENTS COMPONENT --- */}
-/* ============================================================
+  {/* ============================================================
    HOPPIN EVENTS — INTERACTIVE EVENT RADAR
-   ============================================================ */
+   ============================================================ */}
 
-export function HoppinEvents() {
+function HoppinEvents() {
   const [events, setEvents] = useState([
     {
       id: 'e1',

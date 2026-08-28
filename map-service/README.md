@@ -23,6 +23,8 @@ map-service/
     update_coordinates_full.sql UPDATE template to correct each placeholder coordinate
     seed_activity_data.sql      Demo crowd/issue/blockage activity -- re-runnable, run before each demo
     reseed_demo.sh              Wrapper: psql "$DATABASE_URL" -f seed_activity_data.sql
+    seed_demo_simulation.sql    DEMO-ONLY curated crowd spread for judge demos -- see its header
+    reseed_demo_simulation.sh   Wrapper: psql "$DATABASE_URL" -f seed_demo_simulation.sql
   frontend/
     index.html         Leaflet map, single file, no build step
   requirements.txt
@@ -82,6 +84,22 @@ routing) decides what `/locations`, `/route`, etc. do.
    counts readings from the last 10 minutes (see "How crowd density
    aggregates" below), so re-run this shortly before you actually show
    the map, not hours ahead.
+
+   **Alternative for a judge/pitch demo**: `sql/seed_demo_simulation.sql`
+   is a separate, hand-curated dataset -- not realistic test data, a
+   deliberately clean red/amber/green spread across campus so the
+   heatmap reads well on stage. Run *either* this *or*
+   `seed_activity_data.sql`, not both (same table, same 10-minute
+   window -- whichever you ran most recently is what's visible):
+
+   ```bash
+   psql "$DATABASE_URL" -f sql/seed_demo_simulation.sql
+   # or: sql/reseed_demo_simulation.sh   (needs DATABASE_URL exported first)
+   ```
+
+   (There's no Node/npm-based seed pipeline in this repo -- the backend
+   is Python/FastAPI and seeding is plain `psql` scripts, so this stays
+   a shell wrapper rather than an `npm run seed:demo` script.)
 6. Get your **pooled** connection string: Project Settings -> Database ->
    Connection string -> **Transaction** mode (port 6543). Use this, not the
    direct connection, for `DATABASE_URL` — see `.env.example` for why.

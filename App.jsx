@@ -469,7 +469,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Mobile Cards View */}
+                  {/*  Mobile Cards View 
                   <div className="hop-mobile-board-list show-on-mobile">
                     {displayedBoardRows.map((row) => {
                       const isPinned = pinnedRows.includes(row.id);
@@ -517,7 +517,7 @@ export default function App() {
                       );
                     })}
                   </div>
-
+                  */}
                   {/* Expand / Collapse Button */}
                   {showExpandButton && (
                     <div style={{ display: 'flex', justifyContent: 'center', padding: '16px 0', borderTop: '1px solid rgba(148,163,184,0.08)' }}>

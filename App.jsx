@@ -28,6 +28,13 @@ const liveDepartureRows = [
 ];
 
 export default function App() {
+
+  // State: User Feedback Section
+  const [feedbackRating, setFeedbackRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  
   // State: Interactive Departure Board
   const [boardCategory, setBoardCategory] = useState('all');
   const [searchFilter, setSearchFilter] = useState('');
@@ -1025,11 +1032,114 @@ export default function App() {
 
         </div>
       </section>
+*/}
+      {/* ============================================================
+          SECTION: GEN-Z USER FEEDBACK & VIBE CHECK
+          ============================================================ */}
+      <section className="hop-section hop-feedback-section" id="un-feedback">
+        <div className="hop-container">
+          <div className="hop-feedback-card">
+            <div className="hop-section-pill">
+              <Sparkles size={13} className="text-mint" />
+              <span>COMMUNITY VIBE CHECK</span>
+            </div>
 
+            <h2 className="hop-section-title">
+              How’s the <span className="hop-text-gradient">telemetry flow?</span>
+            </h2>
+            <p className="hop-section-desc">
+              Drop a rating or slide your concerns straight to the dev team. No cap, we read everything.
+            </p>
+
+            {!feedbackSubmitted ? (
+              <form 
+                className="hop-feedback-form" 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (feedbackRating > 0) setFeedbackSubmitted(true);
+                }}
+              >
+                {/* Interactive Star Rating */}
+                <div className="hop-star-container">
+                  <div className="hop-stars-row">
+                    {[1, 2, 3, 4, 5].map((star) => {
+                      const active = (hoverRating || feedbackRating) >= star;
+                      return (
+                        <button
+                          type="button"
+                          key={star}
+                          className={`hop-star-btn ${active ? 'active' : ''}`}
+                          onMouseEnter={() => setHoverRating(star)}
+                          onMouseLeave={() => setHoverRating(0)}
+                          onClick={() => setFeedbackRating(star)}
+                        >
+                          ★
+                        </button>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Gen-Z Hover / Selection Text Indicator */}
+                  <div className="hop-star-tagline mono">
+                    {(() => {
+                      const current = hoverRating || feedbackRating;
+                      if (current === 1) return "💀 Aww no... what's cooking (wrong)?";
+                      if (current === 2) return "📉 Mid. Needs major fixing.";
+                      if (current === 3) return "👀 Decent, but room for growth.";
+                      if (current === 4) return "🔥 Valid. Clean telemetry!";
+                      if (current === 5) return "⚡ Superb!! Absolute W interface.";
+                      return "Tap a star to rate the vibe";
+                    })()}
+                  </div>
+                </div>
+
+                {/* Text Area for Dev Feedback */}
+                <div className="hop-feedback-input-group">
+                  <textarea
+                    rows="3"
+                    placeholder="Drop your bugs, feature requests, or compliments here..."
+                    value={feedbackText}
+                    onChange={(e) => setFeedbackText(e.target.value)}
+                    className="hop-feedback-textarea mono"
+                  />
+                  <button 
+                    type="submit" 
+                    className="hop-btn-primary hop-feedback-submit"
+                    disabled={feedbackRating === 0}
+                  >
+                    <span>Send to Devs</span>
+                    <ArrowRight size={16} />
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="hop-feedback-success">
+                <div className="hop-sc-icon">
+                  <CheckCircle2 size={40} className="text-mint" />
+                </div>
+                <h3>Feedback Delivered Successfully! 🚀</h3>
+                <p>Thanks for keeping HOPPIN sharp. The developers got your ping.</p>
+                <button 
+                  type="button" 
+                  className="hop-btn-secondary"
+                  onClick={() => {
+                    setFeedbackSubmitted(false);
+                    setFeedbackRating(0);
+                    setFeedbackText('');
+                  }}
+                  style={{ marginTop: '16px' }}
+                >
+                  Send Another Vibe Check
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
       <Footer />
     </div>
   );
-*/}
+
 
       {/* --- HOPPIN EVENTS COMPONENT --- */}
 /* ============================================================

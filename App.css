@@ -2995,3 +2995,18 @@ input {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Hide the bulky mobile cards on desktop screens */
+@media (min-width: 769px) {
+  .show-on-mobile {
+    display: none !important;
+  }
+}
+
+/* Hide the table rows on small mobile screens */
+@media (max-width: 768px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+}

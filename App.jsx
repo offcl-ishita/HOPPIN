@@ -972,7 +972,7 @@ export default function App() {
 
       {/* ============================================================
           SECTION 8: FAQ SECTION
-          ============================================================ */}
+          ============================================================ 
       <section className="hop-section hop-faq-section" id="un-faq">
         <div className="hop-container">
           
@@ -1029,7 +1029,7 @@ export default function App() {
       <Footer />
     </div>
   );
-}
+*/}
 
       {/* --- HOPPIN EVENTS COMPONENT --- */}
 /* ============================================================

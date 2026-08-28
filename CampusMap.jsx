@@ -347,6 +347,16 @@ export default function CampusMap() {
       if (!res.ok) throw new Error(`GET /locations failed: ${res.status}`);
       const geojson = await res.json();
 
+      // Client-side coordinate patch: real, Google-Maps-verified position,
+      // applied on top of whatever's in the DB so the pin is correct on
+      // screen right now without needing a DB write. Remove once
+      // update_coordinates_full.sql actually runs against the database.
+      geojson.features.forEach((f) => {
+        if (f.properties.name === 'Genz Beta Cafe (Near Hotel Management Block)') {
+          f.geometry.coordinates = [80.04249029588425, 12.823047257861797];
+        }
+      });
+
       setFeatures(geojson.features);
       setStatus('ready');
 
